@@ -343,11 +343,38 @@
             justify-content: center;
         }
 
+        .wallet-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .wallet-controls label {
+            margin-right: 5px;
+            font-weight: bold;
+        }
+
+        .wallet-controls select,
+        .wallet-controls .btn {
+            padding: 8px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border);
+            font-size: 1rem;
+        }
+        .wallet-controls .btn {
+            border: none; /* Override default button border */
+        }
+
         @media (max-width: 600px) {
             .app-container {
                 margin: 0;
                 border-radius: 0;
                 box-shadow: none;
+            }
+            .wallet-controls {
+                flex-wrap: wrap; /* Allow wrapping on smaller screens */
             }
         }
     </style>
@@ -357,6 +384,14 @@
         <div class="app-header">
             <h1 class="app-title">MY CASH</h1>
             <p class="app-subtitle">Personal Expense Manager</p>
+        </div>
+
+        <div class="wallet-controls">
+            <label for="walletSelect">Wallet:</label>
+            <select id="walletSelect">
+                </select>
+            <button class="btn btn-primary" id="addWalletBtn">Add New</button>
+            <button class="btn btn-danger" id="deleteWalletBtn">Delete Wallet</button>
         </div>
 
         <div class="search-section">
@@ -422,7 +457,7 @@
     <div class="modal confirm-modal" id="confirmModal" role="dialog" aria-labelledby="confirmModalTitle">
         <div class="modal-content">
             <h3 class="modal-title" id="confirmModalTitle">Confirm Delete</h3>
-            <p>Are you sure you want to delete this transaction?</p>
+            <p id="confirmModalText">Are you sure you want to delete this transaction?</p>
             <div class="modal-actions">
                 <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
                 <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
@@ -431,57 +466,17 @@
     </div>
 
     <script>
-        // Transaction data with initial balance
-        let transactions = [
-            {
-                id: 1,
-                type: 'out',
-                amount: 110,
-                description: 'Sadqa',
-                date: new Date('2025-07-15T22:54:00'),
-                balance: 17560
-            },
-            {
-                id: 2,
-                type: 'out',
-                amount: 1490,
-                description: 'Bought snacks',
-                date: new Date('2025-07-15T22:53:00'),
-                balance: 17790
-            },
-            {
-                id: 3,
-                type: 'out',
-                amount: 1490,
-                description: 'Bought groceries',
-                date: new Date('2025-07-15T17:35:00'),
-                balance: 17900
-            },
-            {
-                id: 4,
-                type: 'in',
-                amount: 230,
-                description: 'Freelance payment',
-                date: new Date('2025-07-15T10:30:00'),
-                balance: 17560
-            },
-            {
-                id: 5,
-                type: 'in',
-                amount: 5000,
-                description: 'Salary',
-                date: new Date('2025-07-10T09:00:00'),
-                balance: 22560
-            },
-            {
-                id: 6,
-                type: 'out',
-                amount: 1200,
-                description: 'Rent payment',
-                date: new Date('2025-07-05T12:00:00'),
-                balance: 17560
-            }
-        ];
+        // Data structure for multiple wallets
+        let wallets = {}; // Will be populated from localStorage or default
+
+        // Global Variables
+        let currentWalletId = 'main'; // Default selected wallet
+        let currentTransactionType = null;
+        let currentTransactionId = null;
+        let currentSearch = '';
+        let currentFilter = 'all';
+        let transactionToDelete = null; // For confirm modal delete
+        let deletionType = null; // 'transaction' or 'wallet'
 
         // DOM Elements
         const elements = {
@@ -501,41 +496,85 @@
             searchInput: document.getElementById('searchInput'),
             filterButtons: document.querySelectorAll('.filter-btn'),
             confirmModal: document.getElementById('confirmModal'),
+            confirmModalTitle: document.getElementById('confirmModalTitle'),
+            confirmModalText: document.getElementById('confirmModalText'),
             cancelDeleteBtn: document.getElementById('cancelDeleteBtn'),
             confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
-            // New local file backup/restore elements
             backupToFileBtn: document.getElementById('backupToFileBtn'),
             restoreFromFileBtn: document.getElementById('restoreFromFileBtn'),
-            fileInput: document.getElementById('fileInput')
+            fileInput: document.getElementById('fileInput'),
+            walletSelect: document.getElementById('walletSelect'),
+            addWalletBtn: document.getElementById('addWalletBtn'),
+            deleteWalletBtn: document.getElementById('deleteWalletBtn')
         };
 
-        // Current state
-        let currentFilter = 'all';
-        let currentSearch = '';
-        let currentTransactionType = 'in';
-        let currentTransactionId = null;
-        let transactionToDelete = null;
 
-        // Load transactions from localStorage
+        // Get transactions for the current wallet
+        function getCurrentWalletTransactions() {
+            // Ensure the current wallet exists, if not, initialize it as empty.
+            // This is primarily for cases where currentWalletId might be set to a non-existent wallet (e.g., after a faulty restore)
+            if (!wallets[currentWalletId]) {
+                wallets[currentWalletId] = [];
+                saveToLocalStorage(); // Save this new empty wallet
+            }
+            return wallets[currentWalletId];
+        }
+
+        // Load all wallets from localStorage
         function loadFromLocalStorage() {
-            const stored = localStorage.getItem('transactions');
+            const stored = localStorage.getItem('wallets');
             if (stored) {
-                transactions = JSON.parse(stored).map(t => ({
-                    ...t,
-                    date: new Date(t.date)
-                }));
+                try {
+                    const parsedWallets = JSON.parse(stored);
+                    for (const walletId in parsedWallets) {
+                        if (Array.isArray(parsedWallets[walletId])) {
+                            wallets[walletId] = parsedWallets[walletId].map(t => ({
+                                ...t,
+                                date: new Date(t.date)
+                            }));
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error parsing wallets from localStorage:", e);
+                    wallets = {}; // Reset wallets if parsing fails
+                }
+            }
+
+            // If wallets is still empty after attempting to load from storage (e.g., first run, or corrupted data)
+            if (Object.keys(wallets).length === 0) {
+                wallets = {
+                    'main': [ // Initialize with default 'main' wallet and some sample data
+                        { id: 1, type: 'out', amount: 110, description: 'Sadqa', date: new Date('2025-07-15T22:54:00'), balance: 0 },
+                        { id: 2, type: 'out', amount: 1490, description: 'Bought snacks', date: new Date('2025-07-15T22:53:00'), balance: 0 },
+                        { id: 3, type: 'out', amount: 1490, description: 'Bought groceries', date: new Date('2025-07-15T17:35:00'), balance: 0 },
+                        { id: 4, type: 'in', amount: 230, description: 'Freelance payment', date: new Date('2025-07-15T10:30:00'), balance: 0 },
+                        { id: 5, type: 'in', amount: 5000, description: 'Salary', date: new Date('2025-07-10T09:00:00'), balance: 0 },
+                        { id: 6, type: 'out', amount: 1200, description: 'Rent payment', date: new Date('2025-07-05T12:00:00'), balance: 0 }
+                    ],
+                    'savings': [
+                        { id: 1, type: 'in', amount: 10000, description: 'Initial deposit', date: new Date('2024-01-01T10:00:00'), balance: 0 },
+                        { id: 2, type: 'in', amount: 500, description: 'Interest', date: new Date('2024-03-01T10:00:00'), balance: 0 }
+                    ]
+                };
+                saveToLocalStorage();
+            }
+
+            // Ensure currentWalletId points to an existing wallet.
+            // If currentWalletId is not found (e.g., deleted wallet, or first run), default to the first available wallet.
+            if (!Object.keys(wallets).includes(currentWalletId)) {
+                currentWalletId = Object.keys(wallets)[0];
             }
         }
 
-        // Save transactions to localStorage
+        // Save all wallets to localStorage
         function saveToLocalStorage() {
-            localStorage.setItem('transactions', JSON.stringify(transactions));
+            localStorage.setItem('wallets', JSON.stringify(wallets));
         }
 
-        // Function to backup transactions to a local JSON file
+        // Function to backup all wallets to a local JSON file
         function backupToFile() {
-            const fileName = 'my_cash_transactions_backup.json';
-            const fileContent = JSON.stringify(transactions, null, 2); // Pretty print JSON
+            const fileName = 'my_cash_wallets_backup.json';
+            const fileContent = JSON.stringify(wallets, null, 2); // Pretty print JSON
 
             const blob = new Blob([fileContent], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -543,17 +582,17 @@
             const a = document.createElement('a');
             a.href = url;
             a.download = fileName;
-            document.body.appendChild(a); // Append to body to make it clickable in Firefox
+            document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a); // Clean up
-            URL.revokeObjectURL(url); // Release the object URL
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
-            alert('Transactions backed up successfully to ' + fileName + '!');
+            alert('All wallets backed up successfully to ' + fileName + '!');
         }
 
-        // Function to restore transactions from a local JSON file
+        // Function to restore all wallets from a local JSON file
         function restoreFromFile() {
-            elements.fileInput.click(); // Trigger the hidden file input click
+            elements.fileInput.click();
         }
 
         // Handle file selection and restoration
@@ -567,39 +606,146 @@
             reader.onload = (e) => {
                 try {
                     const loadedData = JSON.parse(e.target.result);
-                    // Basic validation for loaded data
-                    if (Array.isArray(loadedData) && loadedData.every(t => 'id' in t && 'type' in t && 'amount' in t && 'description' in t && 'date' in t)) {
-                        // Confirm with user before overwriting
-                        if (confirm('Restoring will overwrite your current transactions. Are you sure?')) {
-                            transactions = loadedData.map(t => ({ // Ensure dates are Date objects
-                                ...t,
-                                date: new Date(t.date)
-                            }));
-                            saveToLocalStorage(); // Save restored data to local storage
-                            recalculateBalances(); // Recalculate balances based on new data
-                            renderTransactions();
-                            updateSummary();
-                            alert('Transactions restored successfully from file!');
+                    // Basic validation for loaded data (should be an object of arrays)
+                    if (typeof loadedData === 'object' && loadedData !== null && Object.values(loadedData).every(Array.isArray)) {
+                        if (confirm('Restoring will overwrite your current wallets. Are you sure?')) {
+                            // Ensure dates are Date objects for all transactions in all restored wallets
+                            for (const walletId in loadedData) {
+                                if (Array.isArray(loadedData[walletId])) {
+                                    loadedData[walletId] = loadedData[walletId].map(t => ({
+                                        ...t,
+                                        date: new Date(t.date)
+                                    }));
+                                }
+                            }
+                            wallets = loadedData; // Overwrite all wallets
+                            // Ensure currentWalletId is valid after restore
+                            if (!Object.keys(wallets).includes(currentWalletId)) {
+                                currentWalletId = Object.keys(wallets)[0] || 'main'; // Fallback to 'main' if all wallets are empty after restore
+                            }
+                            saveToLocalStorage();
+                            initAppDisplay(); // Re-initialize display
+                            populateWalletSelector(); // Re-populate dropdown
+                            alert('Wallets restored successfully from file!');
                         }
                     } else {
-                        alert('Invalid file format. Please select a valid transaction backup file.');
+                        alert('Invalid file format. Please select a valid wallet backup file (JSON object of arrays).');
                     }
                 } catch (error) {
-                    console.error('Error parsing file:', error);
+                    console.error('Error reading or parsing file:', error);
                     alert('Error reading or parsing file. Please ensure it\'s a valid JSON backup file.');
                 }
             };
             reader.readAsText(file);
         }
 
-        // Initialize the app
-        function init() {
-            loadFromLocalStorage();
-            transactions.sort((a, b) => b.date - a.date);
+        // Populate the wallet selection dropdown
+        function populateWalletSelector() {
+            elements.walletSelect.innerHTML = ''; // Clear existing options
+            const walletNames = Object.keys(wallets);
+
+            if (walletNames.length === 0) {
+                // This block should ideally not be hit during normal load due to loadFromLocalStorage ensuring wallets exist.
+                // It's a defensive measure if wallets somehow become empty (e.g., external deletion or very specific restore scenarios).
+                const noWalletsOption = new Option('No Wallets Available', '');
+                elements.walletSelect.add(noWalletsOption);
+                elements.walletSelect.disabled = true; // Disable if no wallets
+                elements.deleteWalletBtn.disabled = true; // Cannot delete if no wallets
+            } else {
+                elements.walletSelect.disabled = false;
+                elements.deleteWalletBtn.disabled = (walletNames.length === 1); // Disable delete if only one wallet
+
+                walletNames.forEach(walletId => {
+                    const option = document.createElement('option');
+                    option.value = walletId;
+                    option.textContent = walletId.charAt(0).toUpperCase() + walletId.slice(1); // Capitalize for display
+                    elements.walletSelect.appendChild(option);
+                });
+                elements.walletSelect.value = currentWalletId; // Set current selection (currentWalletId is already guaranteed valid by loadFromLocalStorage)
+            }
+        }
+
+        // Handle wallet change
+        function handleWalletChange() {
+            currentWalletId = elements.walletSelect.value;
+            currentSearch = ''; // Clear search when switching wallets
+            elements.searchInput.value = '';
+            currentFilter = 'all'; // Reset filter
+            elements.filterButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+            initAppDisplay(); // Re-render the display for the new wallet
+        }
+
+        // Function to add a new wallet
+        function addWallet() {
+            const walletName = prompt("Enter a name for the new wallet:");
+            if (walletName === null || walletName.trim() === '') {
+                alert("Wallet name cannot be empty.");
+                return;
+            }
+            const normalizedName = walletName.trim().toLowerCase();
+            if (wallets[normalizedName]) {
+                alert("A wallet with this name already exists. Please choose a different name.");
+                return;
+            }
+
+            wallets[normalizedName] = []; // Create a new empty wallet
+            currentWalletId = normalizedName; // Set it as the current wallet
+            saveToLocalStorage(); // Save all wallets
+            populateWalletSelector(); // Update the dropdown
+            initAppDisplay(); // Re-render for the new wallet
+            alert(`Wallet '${walletName.trim()}' created successfully!`);
+        }
+
+        // Function to prompt and delete the current wallet
+        function deleteCurrentWallet() {
+            const walletNames = Object.keys(wallets);
+            if (walletNames.length <= 1) {
+                alert("You cannot delete the last wallet. Please add another wallet first if you wish to delete this one.");
+                return;
+            }
+
+            deletionType = 'wallet';
+            elements.confirmModalTitle.textContent = `Delete Wallet: "${elements.walletSelect.options[elements.walletSelect.selectedIndex].textContent}"`;
+            elements.confirmModalText.textContent = `Are you sure you want to delete the wallet "${elements.walletSelect.options[elements.walletSelect.selectedIndex].textContent}" and all its transactions? This action cannot be undone.`;
+            elements.confirmModal.style.display = 'flex';
+        }
+
+        // Execute deletion based on deletionType
+        function performDeletion() {
+            if (deletionType === 'transaction') {
+                deleteTransaction();
+            } else if (deletionType === 'wallet') {
+                delete wallets[currentWalletId]; // Delete the wallet object itself
+                // After deletion, switch to the first available wallet
+                currentWalletId = Object.keys(wallets)[0]; // Will always be valid due to the walletNames.length check in deleteCurrentWallet
+                saveToLocalStorage();
+                populateWalletSelector(); // Update dropdown
+                initAppDisplay(); // Re-render for the new current wallet
+                alert("Wallet deleted successfully!");
+            }
+            elements.confirmModal.style.display = 'none';
+            deletionType = null; // Reset deletion type
+        }
+
+
+        // Function to call all display-related updates
+        function initAppDisplay() {
+            const currentTransactions = getCurrentWalletTransactions(); // Ensure wallet exists if currentWalletId is valid
+            currentTransactions.sort((a, b) => b.date - a.date);
             recalculateBalances();
             renderTransactions();
             updateSummary();
+        }
 
+        // Initialize the app
+        function init() {
+            console.log("App initializing...");
+            loadFromLocalStorage();
+            populateWalletSelector();
+            initAppDisplay(); // Initial display load
+
+            // Event Listeners
             elements.cashInBtn.addEventListener('click', () => {
                 currentTransactionType = 'in';
                 openTransactionModal('Add Income');
@@ -623,31 +769,36 @@
                 });
             });
 
+            // Universal Cancel/Confirm for Modals
             elements.cancelDeleteBtn.addEventListener('click', () => {
                 elements.confirmModal.style.display = 'none';
-                transactionToDelete = null;
+                deletionType = null; // Reset
+                transactionToDelete = null; // Reset
             });
+            elements.confirmDeleteBtn.addEventListener('click', performDeletion); // Calls the unified deletion handler
 
-            elements.confirmDeleteBtn.addEventListener('click', deleteTransaction);
-
-            // Event listeners for local file backup/restore
             elements.backupToFileBtn.addEventListener('click', backupToFile);
             elements.restoreFromFileBtn.addEventListener('click', restoreFromFile);
             elements.fileInput.addEventListener('change', handleFileSelect);
+            elements.walletSelect.addEventListener('change', handleWalletChange);
+            elements.addWalletBtn.addEventListener('click', addWallet);
+            elements.deleteWalletBtn.addEventListener('click', deleteCurrentWallet);
 
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeTransactionModal();
                     elements.confirmModal.style.display = 'none';
-                    transactionToDelete = null;
+                    deletionType = null; // Reset on Escape
+                    transactionToDelete = null; // Reset on Escape
                 }
             });
+            console.log("App initialized successfully.");
         }
 
         // Open transaction modal for add or edit
         function openTransactionModal(title, transaction = null) {
-            elements.confirmModal.style.display = 'none';
+            elements.confirmModal.style.display = 'none'; // Ensure confirm modal is hidden
             elements.modalTitle.textContent = title;
 
             if (transaction) {
@@ -673,6 +824,7 @@
 
         // Save new or edited transaction
         function saveTransaction() {
+            const currentTransactions = getCurrentWalletTransactions();
             const amount = parseFloat(elements.transactionAmount.value);
             const description = elements.transactionDescription.value.trim();
 
@@ -697,80 +849,75 @@
             }
 
             if (currentTransactionId) {
-                const index = transactions.findIndex(t => t.id === currentTransactionId);
+                const index = currentTransactions.findIndex(t => t.id === currentTransactionId);
                 if (index !== -1) {
-                    transactions[index].amount = amount;
-                    transactions[index].description = description;
-                    transactions[index].type = currentTransactionType;
-                    recalculateBalances();
+                    currentTransactions[index].amount = amount;
+                    currentTransactions[index].description = description;
+                    currentTransactions[index].type = currentTransactionType;
                 }
             } else {
-                recalculateBalances();
-                const currentBalance = transactions.length > 0 ? transactions[0].balance : 0;
-                const newBalance = currentTransactionType === 'in' ?
-                    currentBalance + amount :
-                    currentBalance - amount;
-
                 const newTransaction = {
-                    id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                    id: currentTransactions.length > 0 ? Math.max(...currentTransactions.map(t => t.id)) + 1 : 1,
                     type: currentTransactionType,
                     amount: amount,
                     description: description,
                     date: new Date(),
-                    balance: newBalance
+                    balance: 0 // Will be recalculated
                 };
 
-                transactions.unshift(newTransaction);
+                currentTransactions.unshift(newTransaction);
             }
 
-            saveToLocalStorage();
+            recalculateBalances(); // Recalculate for current wallet after adding/editing
+            saveToLocalStorage(); // Save all wallets
             closeTransactionModal();
-            renderTransactions();
-            updateSummary();
+            initAppDisplay(); // Re-render current wallet
         }
 
         // Prompt to delete a transaction
         function promptDeleteTransaction(transaction) {
             elements.transactionModal.style.display = 'none';
             transactionToDelete = transaction;
+            deletionType = 'transaction';
+            elements.confirmModalTitle.textContent = 'Confirm Delete Transaction';
+            elements.confirmModalText.textContent = 'Are you sure you want to delete this transaction?';
             elements.confirmModal.style.display = 'flex';
         }
 
-        // Delete the transaction after confirmation
+        // Delete the transaction after confirmation (called by performDeletion)
         function deleteTransaction() {
             if (!transactionToDelete) return;
 
-            const index = transactions.findIndex(t => t.id === transactionToDelete.id);
+            const currentTransactions = getCurrentWalletTransactions();
+            const index = currentTransactions.findIndex(t => t.id === transactionToDelete.id);
             if (index !== -1) {
-                transactions.splice(index, 1);
-                recalculateBalances();
-                saveToLocalStorage();
-                renderTransactions();
-                updateSummary();
+                currentTransactions.splice(index, 1);
             }
 
-            elements.confirmModal.style.display = 'none';
+            recalculateBalances(); // Recalculate for current wallet
+            saveToLocalStorage(); // Save all wallets
+            initAppDisplay(); // Re-render current wallet
             transactionToDelete = null;
         }
 
-        // Recalculate all balances starting from the oldest transaction
+        // Recalculate all balances for the current wallet starting from the oldest transaction
         function recalculateBalances() {
-            if (transactions.length === 0) return;
+            const currentTransactions = getCurrentWalletTransactions();
+            if (currentTransactions.length === 0) return;
 
-            const sortedTransactions = [...transactions].sort((a, b) => a.date - b.date);
+            // Sort by date ascending for correct balance calculation
+            const sortedTransactions = [...currentTransactions].sort((a, b) => a.date.getTime() - b.date.getTime());
             let runningBalance = 0;
 
             for (const transaction of sortedTransactions) {
-                if (typeof transaction.amount !== 'number' || !['in', 'out'].includes(transaction.type)) {
-                    console.error('Invalid transaction data:', transaction);
-                    continue;
-                }
                 runningBalance += transaction.type === 'in' ? transaction.amount : -transaction.amount;
                 transaction.balance = runningBalance;
             }
 
-            transactions.sort((a, b) => b.date - a.date);
+            // Sort back to newest first for display
+            currentTransactions.sort((a, b) => b.date.getTime() - a.date.getTime());
         }
+
 
         // Handle search input
         function handleSearch() {
@@ -778,9 +925,10 @@
             renderTransactions();
         }
 
-        // Filter transactions based on search and filter
+        // Filter transactions for the current wallet based on search and filter
         function getFilteredTransactions() {
-            return transactions.filter(t => {
+            const currentTransactions = getCurrentWalletTransactions();
+            return currentTransactions.filter(t => {
                 const typeMatch = currentFilter === 'all' || t.type === currentFilter;
                 const searchMatch = currentSearch === '' ||
                     t.description.toLowerCase().includes(currentSearch) ||
@@ -789,7 +937,7 @@
             });
         }
 
-        // Render transactions based on filters and search
+        // Render transactions for the current wallet based on filters and search
         function renderTransactions() {
             const filteredTransactions = getFilteredTransactions();
             elements.transactionList.innerHTML = '';
@@ -801,19 +949,23 @@
                     'No transactions match your search' :
                     'No transactions yet. Add your first transaction!';
                 elements.transactionList.appendChild(noTransactions);
-                elements.entriesCount.textContent = 'Showing 0 entries';
+                elements.entriesCount.textContent = `Showing 0 entries`;
                 return;
             }
 
             const grouped = groupByDate(filteredTransactions);
 
-            for (const [date, transactions] of Object.entries(grouped)) {
+            // Sort grouped dates (keys) from newest to oldest
+            const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+            for (const date of sortedDates) {
+                const transactionsForDate = grouped[date];
                 const dateHeader = document.createElement('div');
                 dateHeader.className = 'transaction-day';
                 dateHeader.textContent = formatDate(new Date(date));
                 elements.transactionList.appendChild(dateHeader);
 
-                transactions.forEach(transaction => {
+                transactionsForDate.forEach(transaction => {
                     const transactionEl = document.createElement('div');
                     transactionEl.className = 'transaction-item';
 
@@ -868,18 +1020,19 @@
             elements.entriesCount.textContent = `Showing ${filteredTransactions.length} ${filteredTransactions.length === 1 ? 'entry' : 'entries'}`;
         }
 
-        // Update summary information
+        // Update summary information for the current wallet
         function updateSummary() {
-            if (transactions.length === 0) {
+            const currentTransactions = getCurrentWalletTransactions();
+            if (currentTransactions.length === 0) {
                 elements.netBalance.textContent = '0';
                 elements.totalIn.textContent = 'Total In (+) 0';
                 elements.totalOut.textContent = 'Total Out (-) 0';
                 return;
             }
 
-            const totalIn = transactions.reduce((sum, t) => sum + (t.type === 'in' ? t.amount : 0), 0);
-            const totalOut = transactions.reduce((sum, t) => sum + (t.type === 'out' ? t.amount : 0), 0);
-            const netBalance = transactions[0].balance;
+            const totalIn = currentTransactions.reduce((sum, t) => sum + (t.type === 'in' ? t.amount : 0), 0);
+            const totalOut = currentTransactions.reduce((sum, t) => sum + (t.type === 'out' ? t.amount : 0), 0);
+            const netBalance = currentTransactions[0].balance; // Get balance from the newest transaction
 
             elements.netBalance.textContent = netBalance.toLocaleString();
             elements.totalIn.textContent = `Total In (+) ${totalIn.toLocaleString()}`;
@@ -889,7 +1042,7 @@
         // Helper function to group transactions by date
         function groupByDate(transactions) {
             return transactions.reduce((groups, transaction) => {
-                const date = transaction.date.toISOString().split('T')[0];
+                const date = transaction.date.toISOString().split('T')[0]; // YYYY-MM-DD
                 if (!groups[date]) {
                     groups[date] = [];
                 }
