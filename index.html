@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MY CASH - Personal Expense Manager</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6b8cae;
+            --accent: #ff7e5f;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --text: #333333;
+            --border: #e0e0e0;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: white;
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .app-title {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .app-subtitle {
+            color: var(--secondary);
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .search-section {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+
+        .balance-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .net-balance {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .total-in-out {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .total-in {
+            color: var(--success);
+        }
+
+        .total-out {
+            color: var(--danger);
+        }
+
+        .reports-section {
+            margin-top: 20px;
+        }
+
+        .reports-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .entries-count {
+            color: var(--secondary);
+            font-size: 0.9rem;
+        }
+
+        .transaction-list {
+            margin-top: 15px;
+        }
+
+        .transaction-day {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .transaction-details {
+            flex: 1;
+            padding-right: 40px;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .positive {
+            color: var(--success);
+        }
+
+        .negative {
+            color: var(--danger);
+        }
+
+        .transaction-meta {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            margin-top: 3px;
+        }
+
+        .transaction-actions {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 5px;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-btn {
+            color: var(--primary);
+            background-color: rgba(74, 111, 165, 0.1);
+        }
+
+        .delete-btn {
+            color: var(--danger);
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .cash-in-out {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .cash-btn {
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            font-weight: bold;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cash-btn:active {
+            transform: scale(0.95);
+        }
+
+        .cash-in {
+            background-color: var(--success);
+        }
+
+        .cash-out {
+            background-color: var(--danger);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .modal-title {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .filter-section {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border);
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .filter-btn:first-child {
+            border-radius: var(--border-radius) 0 0 var(--border-radius);
+            border-right: none;
+        }
+
+        .filter-btn:last-child {
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            border-left: none;
+        }
+
+        .filter-btn.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .no-transactions {
+            text-align: center;
+            padding: 20px;
+            color: var(--secondary);
+        }
+
+        .confirm-modal {
+            text-align: center;
+        }
+
+        .confirm-modal .modal-actions {
+            justify-content: center;
+        }
+
+        @media (max-width: 600px) {
+            .app-container {
+                margin: 0;
+                border-radius: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <h1 class="app-title">MY CASH</h1>
+            <p class="app-subtitle">Personal Expense Manager</p>
+        </div>
+
+        <div class="search-section">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search transactions..." aria-label="Search transactions">
+        </div>
+
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="in">Income</button>
+            <button class="filter-btn" data-filter="out">Expenses</button>
+        </div>
+
+        <div class="balance-section">
+            <div class="net-balance" id="netBalance">0</div>
+            <div>Net Balance</div>
+            <div class="total-in-out">
+                <div class="total-in" id="totalIn">Total In (+) 0</div>
+                <div class="total-out" id="totalOut">Total Out (-) 0</div>
+            </div>
+        </div>
+
+        <div class="reports-section">
+            <div class="reports-header">
+                <h3>TRANSACTIONS</h3>
+                <span class="entries-count" id="entriesCount">Showing 0 entries</span>
+            </div>
+
+            <div class="transaction-list" id="transactionList">
+                <div class="no-transactions">No transactions yet. Add your first transaction!</div>
+            </div>
+        </div>
+
+        <div class="cash-in-out">
+            <button class="cash-btn cash-in" id="cashInBtn">+ CASH IN</button>
+            <button class="cash-btn cash-out" id="cashOutBtn">- CASH OUT</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px; display: flex; justify-content: space-around;">
+            <button class="btn btn-primary" id="backupToFileBtn">Backup to File</button>
+            <button class="btn btn-secondary" id="restoreFromFileBtn">Restore from File</button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
+        </div>
+    </div>
+
+    <div class="modal" id="transactionModal" role="dialog" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle">Add Transaction</h3>
+            <div class="form-group">
+                <label for="transactionAmount">Amount</label>
+                <input type="number" id="transactionAmount" class="form-control" placeholder="Enter amount" step="0.01" aria-label="Transaction amount">
+            </div>
+            <div class="form-group">
+                <label for="transactionDescription">Description</label>
+                <input type="text" id="transactionDescription" class="form-control" placeholder="Enter description" maxlength="100" aria-label="Transaction description">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="saveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal confirm-modal" id="confirmModal" role="dialog" aria-labelledby="confirmModalTitle">
+        <div class="modal-content">
+            <h3 class="modal-title" id="confirmModalTitle">Confirm Delete</h3>
+            <p>Are you sure you want to delete this transaction?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Transaction data with initial balance
+        let transactions = [
+            {
+                id: 1,
+                type: 'out',
+                amount: 110,
+                description: 'Sadqa',
+                date: new Date('2025-07-15T22:54:00'),
+                balance: 17560
+            },
+            {
+                id: 2,
+                type: 'out',
+                amount: 1490,
+                description: 'Bought snacks',
+                date: new Date('2025-07-15T22:53:00'),
+                balance: 17790
+            },
+            {
+                id: 3,
+                type: 'out',
+                amount: 1490,
+                description: 'Bought groceries',
+                date: new Date('2025-07-15T17:35:00'),
+                balance: 17900
+            },
+            {
+                id: 4,
+                type: 'in',
+                amount: 230,
+                description: 'Freelance payment',
+                date: new Date('2025-07-15T10:30:00'),
+                balance: 17560
+            },
+            {
+                id: 5,
+                type: 'in',
+                amount: 5000,
+                description: 'Salary',
+                date: new Date('2025-07-10T09:00:00'),
+                balance: 22560
+            },
+            {
+                id: 6,
+                type: 'out',
+                amount: 1200,
+                description: 'Rent payment',
+                date: new Date('2025-07-05T12:00:00'),
+                balance: 17560
+            }
+        ];
+
+        // DOM Elements
+        const elements = {
+            transactionList: document.getElementById('transactionList'),
+            netBalance: document.getElementById('netBalance'),
+            totalIn: document.getElementById('totalIn'),
+            totalOut: document.getElementById('totalOut'),
+            entriesCount: document.getElementById('entriesCount'),
+            cashInBtn: document.getElementById('cashInBtn'),
+            cashOutBtn: document.getElementById('cashOutBtn'),
+            transactionModal: document.getElementById('transactionModal'),
+            modalTitle: document.getElementById('modalTitle'),
+            cancelBtn: document.getElementById('cancelBtn'),
+            saveBtn: document.getElementById('saveBtn'),
+            transactionAmount: document.getElementById('transactionAmount'),
+            transactionDescription: document.getElementById('transactionDescription'),
+            searchInput: document.getElementById('searchInput'),
+            filterButtons: document.querySelectorAll('.filter-btn'),
+            confirmModal: document.getElementById('confirmModal'),
+            cancelDeleteBtn: document.getElementById('cancelDeleteBtn'),
+            confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+            // New local file backup/restore elements
+            backupToFileBtn: document.getElementById('backupToFileBtn'),
+            restoreFromFileBtn: document.getElementById('restoreFromFileBtn'),
+            fileInput: document.getElementById('fileInput')
+        };
+
+        // Current state
+        let currentFilter = 'all';
+        let currentSearch = '';
+        let currentTransactionType = 'in';
+        let currentTransactionId = null;
+        let transactionToDelete = null;
+
+        // Load transactions from localStorage
+        function loadFromLocalStorage() {
+            const stored = localStorage.getItem('transactions');
+            if (stored) {
+                transactions = JSON.parse(stored).map(t => ({
+                    ...t,
+                    date: new Date(t.date)
+                }));
+            }
+        }
+
+        // Save transactions to localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        // Function to backup transactions to a local JSON file
+        function backupToFile() {
+            const fileName = 'my_cash_transactions_backup.json';
+            const fileContent = JSON.stringify(transactions, null, 2); // Pretty print JSON
+
+            const blob = new Blob([fileContent], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a); // Append to body to make it clickable in Firefox
+            a.click();
+            document.body.removeChild(a); // Clean up
+            URL.revokeObjectURL(url); // Release the object URL
+
+            alert('Transactions backed up successfully to ' + fileName + '!');
+        }
+
+        // Function to restore transactions from a local JSON file
+        function restoreFromFile() {
+            elements.fileInput.click(); // Trigger the hidden file input click
+        }
+
+        // Handle file selection and restoration
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    // Basic validation for loaded data
+                    if (Array.isArray(loadedData) && loadedData.every(t => 'id' in t && 'type' in t && 'amount' in t && 'description' in t && 'date' in t)) {
+                        // Confirm with user before overwriting
+                        if (confirm('Restoring will overwrite your current transactions. Are you sure?')) {
+                            transactions = loadedData.map(t => ({ // Ensure dates are Date objects
+                                ...t,
+                                date: new Date(t.date)
+                            }));
+                            saveToLocalStorage(); // Save restored data to local storage
+                            recalculateBalances(); // Recalculate balances based on new data
+                            renderTransactions();
+                            updateSummary();
+                            alert('Transactions restored successfully from file!');
+                        }
+                    } else {
+                        alert('Invalid file format. Please select a valid transaction backup file.');
+                    }
+                } catch (error) {
+                    console.error('Error parsing file:', error);
+                    alert('Error reading or parsing file. Please ensure it\'s a valid JSON backup file.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Initialize the app
+        function init() {
+            loadFromLocalStorage();
+            transactions.sort((a, b) => b.date - a.date);
+            recalculateBalances();
+            renderTransactions();
+            updateSummary();
+
+            elements.cashInBtn.addEventListener('click', () => {
+                currentTransactionType = 'in';
+                openTransactionModal('Add Income');
+            });
+
+            elements.cashOutBtn.addEventListener('click', () => {
+                currentTransactionType = 'out';
+                openTransactionModal('Add Expense');
+            });
+
+            elements.cancelBtn.addEventListener('click', closeTransactionModal);
+            elements.saveBtn.addEventListener('click', saveTransaction);
+            elements.searchInput.addEventListener('input', handleSearch);
+
+            elements.filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    elements.filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    currentFilter = button.dataset.filter;
+                    renderTransactions();
+                });
+            });
+
+            elements.cancelDeleteBtn.addEventListener('click', () => {
+                elements.confirmModal.style.display = 'none';
+                transactionToDelete = null;
+            });
+
+            elements.confirmDeleteBtn.addEventListener('click', deleteTransaction);
+
+            // Event listeners for local file backup/restore
+            elements.backupToFileBtn.addEventListener('click', backupToFile);
+            elements.restoreFromFileBtn.addEventListener('click', restoreFromFile);
+            elements.fileInput.addEventListener('change', handleFileSelect);
+
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeTransactionModal();
+                    elements.confirmModal.style.display = 'none';
+                    transactionToDelete = null;
+                }
+            });
+        }
+
+        // Open transaction modal for add or edit
+        function openTransactionModal(title, transaction = null) {
+            elements.confirmModal.style.display = 'none';
+            elements.modalTitle.textContent = title;
+
+            if (transaction) {
+                currentTransactionId = transaction.id;
+                elements.transactionAmount.value = transaction.amount;
+                elements.transactionDescription.value = transaction.description;
+                currentTransactionType = transaction.type;
+            } else {
+                currentTransactionId = null;
+                elements.transactionAmount.value = '';
+                elements.transactionDescription.value = '';
+            }
+
+            elements.transactionModal.style.display = 'flex';
+            elements.transactionAmount.focus();
+        }
+
+        // Close transaction modal
+        function closeTransactionModal() {
+            elements.transactionModal.style.display = 'none';
+            currentTransactionId = null;
+        }
+
+        // Save new or edited transaction
+        function saveTransaction() {
+            const amount = parseFloat(elements.transactionAmount.value);
+            const description = elements.transactionDescription.value.trim();
+
+            if (isNaN(amount)) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            if (amount <= 0) {
+                alert('Amount must be greater than 0');
+                return;
+            }
+
+            if (!description) {
+                alert('Please enter a description');
+                return;
+            }
+
+            if (description.length > 100) {
+                alert('Description cannot exceed 100 characters');
+                return;
+            }
+
+            if (currentTransactionId) {
+                const index = transactions.findIndex(t => t.id === currentTransactionId);
+                if (index !== -1) {
+                    transactions[index].amount = amount;
+                    transactions[index].description = description;
+                    transactions[index].type = currentTransactionType;
+                    recalculateBalances();
+                }
+            } else {
+                recalculateBalances();
+                const currentBalance = transactions.length > 0 ? transactions[0].balance : 0;
+                const newBalance = currentTransactionType === 'in' ?
+                    currentBalance + amount :
+                    currentBalance - amount;
+
+                const newTransaction = {
+                    id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+                    type: currentTransactionType,
+                    amount: amount,
+                    description: description,
+                    date: new Date(),
+                    balance: newBalance
+                };
+
+                transactions.unshift(newTransaction);
+            }
+
+            saveToLocalStorage();
+            closeTransactionModal();
+            renderTransactions();
+            updateSummary();
+        }
+
+        // Prompt to delete a transaction
+        function promptDeleteTransaction(transaction) {
+            elements.transactionModal.style.display = 'none';
+            transactionToDelete = transaction;
+            elements.confirmModal.style.display = 'flex';
+        }
+
+        // Delete the transaction after confirmation
+        function deleteTransaction() {
+            if (!transactionToDelete) return;
+
+            const index = transactions.findIndex(t => t.id === transactionToDelete.id);
+            if (index !== -1) {
+                transactions.splice(index, 1);
+                recalculateBalances();
+                saveToLocalStorage();
+                renderTransactions();
+                updateSummary();
+            }
+
+            elements.confirmModal.style.display = 'none';
+            transactionToDelete = null;
+        }
+
+        // Recalculate all balances starting from the oldest transaction
+        function recalculateBalances() {
+            if (transactions.length === 0) return;
+
+            const sortedTransactions = [...transactions].sort((a, b) => a.date - b.date);
+            let runningBalance = 0;
+
+            for (const transaction of sortedTransactions) {
+                if (typeof transaction.amount !== 'number' || !['in', 'out'].includes(transaction.type)) {
+                    console.error('Invalid transaction data:', transaction);
+                    continue;
+                }
+                runningBalance += transaction.type === 'in' ? transaction.amount : -transaction.amount;
+                transaction.balance = runningBalance;
+            }
+
+            transactions.sort((a, b) => b.date - a.date);
+        }
+
+        // Handle search input
+        function handleSearch() {
+            currentSearch = elements.searchInput.value.toLowerCase();
+            renderTransactions();
+        }
+
+        // Filter transactions based on search and filter
+        function getFilteredTransactions() {
+            return transactions.filter(t => {
+                const typeMatch = currentFilter === 'all' || t.type === currentFilter;
+                const searchMatch = currentSearch === '' ||
+                    t.description.toLowerCase().includes(currentSearch) ||
+                    t.amount.toString().includes(currentSearch);
+                return typeMatch && searchMatch;
+            });
+        }
+
+        // Render transactions based on filters and search
+        function renderTransactions() {
+            const filteredTransactions = getFilteredTransactions();
+            elements.transactionList.innerHTML = '';
+
+            if (filteredTransactions.length === 0) {
+                const noTransactions = document.createElement('div');
+                noTransactions.className = 'no-transactions';
+                noTransactions.textContent = currentSearch ?
+                    'No transactions match your search' :
+                    'No transactions yet. Add your first transaction!';
+                elements.transactionList.appendChild(noTransactions);
+                elements.entriesCount.textContent = 'Showing 0 entries';
+                return;
+            }
+
+            const grouped = groupByDate(filteredTransactions);
+
+            for (const [date, transactions] of Object.entries(grouped)) {
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'transaction-day';
+                dateHeader.textContent = formatDate(new Date(date));
+                elements.transactionList.appendChild(dateHeader);
+
+                transactions.forEach(transaction => {
+                    const transactionEl = document.createElement('div');
+                    transactionEl.className = 'transaction-item';
+
+                    const detailsEl = document.createElement('div');
+                    detailsEl.className = 'transaction-details';
+
+                    const descEl = document.createElement('div');
+                    descEl.textContent = transaction.description;
+
+                    const metaEl = document.createElement('div');
+                    metaEl.className = 'transaction-meta';
+                    metaEl.textContent = `Entry at ${formatTime(transaction.date)}`;
+
+                    detailsEl.appendChild(descEl);
+                    detailsEl.appendChild(metaEl);
+
+                    const amountEl = document.createElement('div');
+                    amountEl.className = `transaction-amount ${transaction.type === 'in' ? 'positive' : 'negative'}`;
+                    amountEl.textContent = `${transaction.type === 'in' ? '+' : '-'}${transaction.amount.toLocaleString()}`;
+
+                    const actionsEl = document.createElement('div');
+                    actionsEl.className = 'transaction-actions';
+
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'action-btn edit-btn';
+                    editBtn.innerHTML = '✏️';
+                    editBtn.title = 'Edit';
+                    editBtn.setAttribute('aria-label', 'Edit transaction');
+                    editBtn.addEventListener('click', () => {
+                        const title = transaction.type === 'in' ? 'Edit Income' : 'Edit Expense';
+                        openTransactionModal(title, transaction);
+                    });
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'action-btn delete-btn';
+                    deleteBtn.innerHTML = '🗑️';
+                    deleteBtn.title = 'Delete';
+                    deleteBtn.setAttribute('aria-label', 'Delete transaction');
+                    deleteBtn.addEventListener('click', () => promptDeleteTransaction(transaction));
+
+                    actionsEl.appendChild(editBtn);
+                    actionsEl.appendChild(deleteBtn);
+
+                    transactionEl.appendChild(detailsEl);
+                    transactionEl.appendChild(amountEl);
+                    transactionEl.appendChild(actionsEl);
+
+                    elements.transactionList.appendChild(transactionEl);
+                });
+            }
+
+            elements.entriesCount.textContent = `Showing ${filteredTransactions.length} ${filteredTransactions.length === 1 ? 'entry' : 'entries'}`;
+        }
+
+        // Update summary information
+        function updateSummary() {
+            if (transactions.length === 0) {
+                elements.netBalance.textContent = '0';
+                elements.totalIn.textContent = 'Total In (+) 0';
+                elements.totalOut.textContent = 'Total Out (-) 0';
+                return;
+            }
+
+            const totalIn = transactions.reduce((sum, t) => sum + (t.type === 'in' ? t.amount : 0), 0);
+            const totalOut = transactions.reduce((sum, t) => sum + (t.type === 'out' ? t.amount : 0), 0);
+            const netBalance = transactions[0].balance;
+
+            elements.netBalance.textContent = netBalance.toLocaleString();
+            elements.totalIn.textContent = `Total In (+) ${totalIn.toLocaleString()}`;
+            elements.totalOut.textContent = `Total Out (-) ${totalOut.toLocaleString()}`;
+        }
+
+        // Helper function to group transactions by date
+        function groupByDate(transactions) {
+            return transactions.reduce((groups, transaction) => {
+                const date = transaction.date.toISOString().split('T')[0];
+                if (!groups[date]) {
+                    groups[date] = [];
+                }
+                groups[date].push(transaction);
+                return groups;
+            }, {});
+        }
+
+        // Helper function to format date
+        function formatDate(date) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        // Helper function to format time
+        function formatTime(date) {
+            const options = { hour: '2-digit', minute: '2-digit' };
+            return date.toLocaleTimeString(undefined, options);
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
