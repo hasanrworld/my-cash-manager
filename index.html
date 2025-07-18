@@ -32,6 +32,8 @@
             color: var(--text);
             line-height: 1.6;
             padding: 20px;
+            /* Add padding to the bottom to prevent content from being hidden by fixed footer */
+            padding-bottom: 160px; /* Adjust based on footer height */
         }
 
         .app-container {
@@ -197,12 +199,28 @@
             background-color: rgba(220, 53, 69, 0.1);
         }
 
-        .cash-in-out {
+        /* Styles for the new fixed footer */
+        .app-footer-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            padding: 15px 20px;
+            display: flex;
+            flex-direction: column; /* Stack sections vertically */
+            gap: 15px; /* Space between the two button groups */
+            align-items: center;
+            z-index: 99; /* Ensure it stays on top */
+        }
+
+        .cash-in-out-group,
+        .backup-restore-group {
             display: flex;
             justify-content: space-around;
-            margin-top: 25px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border);
+            width: 100%;
+            max-width: 460px; /* Constrain width similar to app-container for aesthetics */
         }
 
         .cash-btn {
@@ -213,6 +231,8 @@
             color: white;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            flex: 1; /* Allow buttons to expand */
+            margin: 0 5px; /* Spacing between cash in/out buttons */
         }
 
         .cash-btn:active {
@@ -225,6 +245,30 @@
 
         .cash-out {
             background-color: var(--danger);
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            flex: 1; /* Allow buttons to expand */
+            margin: 0 5px; /* Spacing between backup/restore buttons */
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
         }
 
         .modal {
@@ -278,49 +322,55 @@
             gap: 10px;
         }
 
-        .btn {
-            padding: 8px 15px;
-            border-radius: var(--border-radius);
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-secondary {
-            background-color: var(--secondary);
-            color: white;
-        }
-
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-
+        /* Styles for filter buttons */
         .filter-section {
             display: flex;
+            flex-direction: column; /* Stack filter groups */
             margin-bottom: 15px;
+            gap: 10px; /* Space between filter groups */
+        }
+
+        .filter-group {
+            display: flex;
+            width: 100%; /* Make filter group take full width */
         }
 
         .filter-btn {
-            flex: 1;
+            flex: 1; /* Distribute space evenly */
             padding: 10px;
             border: 1px solid var(--border);
             background-color: white;
             cursor: pointer;
+            white-space: nowrap; /* Prevent text wrapping */
         }
 
-        .filter-btn:first-child {
+        /* Adjust border-radius for each group */
+        .filter-group .filter-btn:first-child {
             border-radius: var(--border-radius) 0 0 var(--border-radius);
             border-right: none;
         }
 
-        .filter-btn:last-child {
+        .filter-group .filter-btn:last-child {
             border-radius: 0 var(--border-radius) var(--border-radius) 0;
             border-left: none;
+        }
+
+        .filter-group .filter-btn:not(:first-child):not(:last-child) {
+            border-radius: 0;
+            border-right: none;
+            border-left: none;
+        }
+
+        /* New: Style for the date input within the filter group */
+        .filter-group .filter-control {
+            flex: 1; /* Allow it to take up space */
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--border-radius); /* Full border-radius for input */
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: var(--light); /* Slightly different background for input */
+            margin-left: 10px; /* Space from buttons */
         }
 
         .filter-btn.active {
@@ -328,6 +378,7 @@
             color: white;
             border-color: var(--primary);
         }
+
 
         .no-transactions {
             text-align: center;
@@ -368,6 +419,9 @@
         }
 
         @media (max-width: 600px) {
+            body {
+                padding-bottom: 180px; /* Adjust padding for smaller screens if needed */
+            }
             .app-container {
                 margin: 0;
                 border-radius: 0;
@@ -375,6 +429,32 @@
             }
             .wallet-controls {
                 flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            }
+            .cash-btn, .btn {
+                margin: 0 2px; /* Less margin on small screens */
+                padding: 10px 15px;
+            }
+            /* Adjust filter buttons for small screens */
+            .filter-group {
+                flex-wrap: wrap; /* Allow filter buttons to wrap */
+            }
+            .filter-btn {
+                flex: 1 1 auto; /* Allow buttons to grow/shrink based on content, but wrap */
+                width: auto; /* Reset width for wrapping */
+                border-radius: var(--border-radius); /* Give all buttons rounded corners on wrap */
+                margin-bottom: 5px; /* Add space between wrapped buttons */
+                border-right: 1px solid var(--border) !important; /* Ensure borders are visible when wrapped */
+                border-left: 1px solid var(--border) !important;
+            }
+            .filter-group .filter-btn:first-child,
+            .filter-group .filter-btn:last-child {
+                border-radius: var(--border-radius);
+            }
+            /* Adjust filter input for small screens */
+            .filter-group .filter-control {
+                margin-left: 0; /* No left margin when wrapped */
+                margin-top: 5px; /* Add top margin if it wraps below buttons */
+                width: 100%; /* Take full width when wrapped */
             }
         }
     </style>
@@ -389,7 +469,7 @@
         <div class="wallet-controls">
             <label for="walletSelect">Wallet:</label>
             <select id="walletSelect">
-                </select>
+            </select>
             <button class="btn btn-primary" id="addWalletBtn">Add New</button>
             <button class="btn btn-danger" id="deleteWalletBtn">Delete Wallet</button>
         </div>
@@ -399,9 +479,16 @@
         </div>
 
         <div class="filter-section">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="in">Income</button>
-            <button class="filter-btn" data-filter="out">Expenses</button>
+            <div class="filter-group">
+                <button class="filter-btn" data-type-filter="all">All Types</button>
+                <button class="filter-btn" data-type-filter="in">Income</button>
+                <button class="filter-btn" data-type-filter="out">Expenses</button>
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn" data-date-filter="today">Today</button>
+                <button class="filter-btn" data-date-filter="all-dates">All Dates</button>
+                <input type="date" id="dateFilterInput" class="filter-control">
+            </div>
         </div>
 
         <div class="balance-section">
@@ -423,13 +510,13 @@
                 <div class="no-transactions">No transactions yet. Add your first transaction!</div>
             </div>
         </div>
-
-        <div class="cash-in-out">
+    </div> <div class="app-footer-fixed">
+        <div class="cash-in-out-group">
             <button class="cash-btn cash-in" id="cashInBtn">+ CASH IN</button>
             <button class="cash-btn cash-out" id="cashOutBtn">- CASH OUT</button>
         </div>
 
-        <div style="text-align: center; margin-top: 20px; display: flex; justify-content: space-around;">
+        <div class="backup-restore-group">
             <button class="btn btn-primary" id="backupToFileBtn">Backup to File</button>
             <button class="btn btn-secondary" id="restoreFromFileBtn">Restore from File</button>
             <input type="file" id="fileInput" accept=".json" style="display: none;">
@@ -474,7 +561,8 @@
         let currentTransactionType = null;
         let currentTransactionId = null;
         let currentSearch = '';
-        let currentFilter = 'all';
+        let currentTypeFilter = 'all'; // 'all', 'in', 'out'
+        let currentDateFilter = 'today'; // 'today', 'all-dates', or 'YYYY-MM-DD' for a specific date
         let transactionToDelete = null; // For confirm modal delete
         let deletionType = null; // 'transaction' or 'wallet'
 
@@ -494,7 +582,9 @@
             transactionAmount: document.getElementById('transactionAmount'),
             transactionDescription: document.getElementById('transactionDescription'),
             searchInput: document.getElementById('searchInput'),
-            filterButtons: document.querySelectorAll('.filter-btn'),
+            filterTypeButtons: document.querySelectorAll('.filter-group:nth-child(1) .filter-btn'), // Select type filter buttons
+            filterDateButtons: document.querySelectorAll('.filter-group:nth-child(2) .filter-btn'), // Select date filter buttons
+            dateFilterInput: document.getElementById('dateFilterInput'), // New: Date input element
             confirmModal: document.getElementById('confirmModal'),
             confirmModalTitle: document.getElementById('confirmModalTitle'),
             confirmModalText: document.getElementById('confirmModalText'),
@@ -670,9 +760,19 @@
             currentWalletId = elements.walletSelect.value;
             currentSearch = ''; // Clear search when switching wallets
             elements.searchInput.value = '';
-            currentFilter = 'all'; // Reset filter
-            elements.filterButtons.forEach(btn => btn.classList.remove('active'));
-            document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+            currentTypeFilter = 'all'; // Reset type filter
+            currentDateFilter = 'today'; // Reset date filter
+
+            // Update active classes for type filter buttons
+            elements.filterTypeButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-group:nth-child(1) .filter-btn[data-type-filter="all"]').classList.add('active');
+
+            // Update active classes for date filter buttons and input
+            elements.filterDateButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.filter-group:nth-child(2) .filter-btn[data-date-filter="today"]').classList.add('active');
+            elements.dateFilterInput.value = new Date().toISOString().split('T')[0]; // Set to today's date
+            elements.dateFilterInput.disabled = true; // Disable if button is clicked
+
             initAppDisplay(); // Re-render the display for the new wallet
         }
 
@@ -743,6 +843,15 @@
             console.log("App initializing...");
             loadFromLocalStorage();
             populateWalletSelector();
+
+            // Set initial active state for filter buttons, and date input setup
+            // For Type filters
+            document.querySelector('.filter-group:nth-child(1) .filter-btn[data-type-filter="all"]').classList.add('active');
+            // For Date filters
+            document.querySelector('.filter-group:nth-child(2) .filter-btn[data-date-filter="today"]').classList.add('active');
+            elements.dateFilterInput.value = new Date().toISOString().split('T')[0]; // Set to today's date
+            elements.dateFilterInput.disabled = false; // <<< IMPORTANT CHANGE: Make it enabled by default
+
             initAppDisplay(); // Initial display load
 
             // Event Listeners
@@ -760,14 +869,55 @@
             elements.saveBtn.addEventListener('click', saveTransaction);
             elements.searchInput.addEventListener('input', handleSearch);
 
-            elements.filterButtons.forEach(button => {
+            // Filter Buttons for Type
+            elements.filterTypeButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    elements.filterButtons.forEach(btn => btn.classList.remove('active'));
+                    // Remove 'active' from all type filter buttons
+                    elements.filterTypeButtons.forEach(btn => btn.classList.remove('active'));
                     button.classList.add('active');
-                    currentFilter = button.dataset.filter;
+                    currentTypeFilter = button.dataset.typeFilter;
                     renderTransactions();
                 });
             });
+
+            // Filter Buttons for Date
+            elements.filterDateButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Remove 'active' from all date filter buttons
+                    elements.filterDateButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    currentDateFilter = button.dataset.dateFilter;
+
+                    if (currentDateFilter === 'today') {
+                        elements.dateFilterInput.value = new Date().toISOString().split('T')[0];
+                        elements.dateFilterInput.disabled = true; // Disable if Today button is clicked
+                    } else if (currentDateFilter === 'all-dates') {
+                        elements.dateFilterInput.value = '';
+                        elements.dateFilterInput.disabled = true; // Disable if All Dates button is clicked
+                    }
+                    renderTransactions();
+                });
+            });
+
+            // Event listener for the new date input
+            elements.dateFilterInput.addEventListener('change', () => {
+                // Always deactivate buttons first, as input selection is a custom state
+                elements.filterDateButtons.forEach(btn => btn.classList.remove('active'));
+
+                if (elements.dateFilterInput.value === '') {
+                    // If date input is cleared, switch to 'all-dates' filter
+                    currentDateFilter = 'all-dates';
+                    // Activate 'All Dates' button and disable input
+                    document.querySelector('.filter-group:nth-child(2) .filter-btn[data-date-filter="all-dates"]').classList.add('active');
+                    elements.dateFilterInput.disabled = true; // Disable if cleared (now controlled by 'All Dates' button implicitly)
+                } else {
+                    // Specific date selected via input
+                    currentDateFilter = elements.dateFilterInput.value; // YYYY-MM-DD
+                    elements.dateFilterInput.disabled = false; // Keep it enabled for further date selection
+                }
+                renderTransactions();
+            });
+
 
             // Universal Cancel/Confirm for Modals
             elements.cancelDeleteBtn.addEventListener('click', () => {
@@ -928,12 +1078,25 @@
         // Filter transactions for the current wallet based on search and filter
         function getFilteredTransactions() {
             const currentTransactions = getCurrentWalletTransactions();
+            const todayString = new Date().toISOString().split('T')[0]; // YYYY-MM-DD for today
+
             return currentTransactions.filter(t => {
-                const typeMatch = currentFilter === 'all' || t.type === currentFilter;
+                const typeMatch = currentTypeFilter === 'all' || t.type === currentTypeFilter;
                 const searchMatch = currentSearch === '' ||
-                    t.description.toLowerCase().includes(currentSearch) ||
-                    t.amount.toString().includes(currentSearch);
-                return typeMatch && searchMatch;
+                                    t.description.toLowerCase().includes(currentSearch) ||
+                                    t.amount.toString().includes(currentSearch);
+
+                let dateMatch = true; // Assume true if 'all-dates' or no specific date is selected
+                if (currentDateFilter === 'today') {
+                    const transactionDateString = t.date.toISOString().split('T')[0];
+                    dateMatch = transactionDateString === todayString;
+                } else if (currentDateFilter !== 'all-dates') { // If currentDateFilter holds a specific date string (YYYY-MM-DD)
+                    const transactionDateString = t.date.toISOString().split('T')[0];
+                    dateMatch = transactionDateString === currentDateFilter; // Compare with selected date
+                }
+                // If currentDateFilter is 'all-dates', dateMatch remains true
+
+                return typeMatch && searchMatch && dateMatch;
             });
         }
 
@@ -945,9 +1108,15 @@
             if (filteredTransactions.length === 0) {
                 const noTransactions = document.createElement('div');
                 noTransactions.className = 'no-transactions';
-                noTransactions.textContent = currentSearch ?
-                    'No transactions match your search' :
-                    'No transactions yet. Add your first transaction!';
+                if (currentSearch) {
+                    noTransactions.textContent = `No transactions match your search for ${currentDateFilter === 'today' ? 'today' : (currentDateFilter === 'all-dates' ? 'all dates' : 'the selected date')}.`;
+                } else if (currentDateFilter === 'today') {
+                    noTransactions.textContent = 'No transactions for today yet. Add your first transaction!';
+                } else if (currentDateFilter === 'all-dates') {
+                    noTransactions.textContent = 'No transactions in this wallet. Add your first transaction!';
+                } else {
+                    noTransactions.textContent = `No transactions found for ${formatDate(new Date(currentDateFilter))}.`;
+                }
                 elements.transactionList.appendChild(noTransactions);
                 elements.entriesCount.textContent = `Showing 0 entries`;
                 return;
