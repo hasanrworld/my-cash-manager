@@ -1,1239 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MY CASH - Personal Expense Manager</title>
-    <style>
-        :root {
-            --primary: #4a6fa5;
-            --secondary: #6b8cae;
-            --accent: #ff7e5f;
-            --light: #f8f9fa;
-            --dark: #343a40;
-            --text: #333333;
-            --border: #e0e0e0;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: white;
-            color: var(--text);
-            line-height: 1.6;
-            padding: 20px;
-            /* Add padding to the bottom to prevent content from being hidden by fixed footer */
-            padding-bottom: 160px; /* Adjust based on footer height */
-        }
-
-        .app-container {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: var(--box-shadow);
-            border-radius: var(--border-radius);
-        }
-
-        .app-header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .app-title {
-            font-size: 1.8rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-
-        .app-subtitle {
-            color: var(--secondary);
-            font-size: 1rem;
-            margin-bottom: 15px;
-        }
-
-        .search-section {
-            margin-bottom: 20px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-        }
-
-        .balance-section {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .net-balance {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary);
-            margin-bottom: 10px;
-        }
-
-        .total-in-out {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 10px;
-        }
-
-        .total-in {
-            color: var(--success);
-        }
-
-        .total-out {
-            color: var(--danger);
-        }
-
-        .reports-section {
-            margin-top: 20px;
-        }
-
-        .reports-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .entries-count {
-            color: var(--secondary);
-            font-size: 0.9rem;
-        }
-
-        .transaction-list {
-            margin-top: 15px;
-        }
-
-        .transaction-day {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .transaction-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
-            position: relative;
-        }
-
-        .transaction-details {
-            flex: 1;
-            padding-right: 40px;
-        }
-
-        .transaction-amount {
-            font-weight: bold;
-            margin-left: 10px;
-            white-space: nowrap;
-        }
-
-        .positive {
-            color: var(--success);
-        }
-
-        .negative {
-            color: var(--danger);
-        }
-
-        .transaction-meta {
-            font-size: 0.8rem;
-            color: var(--secondary);
-            margin-top: 3px;
-        }
-
-        .transaction-actions {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            gap: 5px;
-        }
-
-        .action-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            padding: 5px;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .edit-btn {
-            color: var(--primary);
-            background-color: rgba(74, 111, 165, 0.1);
-        }
-
-        .delete-btn {
-            color: var(--danger);
-            background-color: rgba(220, 53, 69, 0.1);
-        }
-
-        /* Styles for the new fixed footer */
-        .app-footer-fixed {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: white;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-            padding: 15px 20px;
-            display: flex;
-            flex-direction: column; /* Stack sections vertically */
-            gap: 15px; /* Space between the two button groups */
-            align-items: center;
-            z-index: 99; /* Ensure it stays on top */
-        }
-
-        .cash-in-out-group,
-        .backup-restore-group {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            max-width: 460px; /* Constrain width similar to app-container for aesthetics */
-        }
-
-        .cash-btn {
-            padding: 12px 25px;
-            border-radius: var(--border-radius);
-            font-weight: bold;
-            border: none;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            flex: 1; /* Allow buttons to expand */
-            margin: 0 5px; /* Spacing between cash in/out buttons */
-        }
-
-        .cash-btn:active {
-            transform: scale(0.95);
-        }
-
-        .cash-in {
-            background-color: var(--success);
-        }
-
-        .cash-out {
-            background-color: var(--danger);
-        }
-
-        .btn {
-            padding: 8px 15px;
-            border-radius: var(--border-radius);
-            border: none;
-            cursor: pointer;
-            flex: 1; /* Allow buttons to expand */
-            margin: 0 5px; /* Spacing between backup/restore buttons */
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-secondary {
-            background-color: var(--secondary);
-            color: white;
-        }
-
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            width: 90%;
-            max-width: 400px;
-            box-shadow: var(--box-shadow);
-        }
-
-        .modal-title {
-            margin-bottom: 15px;
-            color: var(--primary);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--border-radius);
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 20px;
-            gap: 10px;
-        }
-
-        /* Styles for filter buttons */
-        .filter-section {
-            display: flex;
-            flex-direction: column; /* Stack filter groups */
-            margin-bottom: 15px;
-            gap: 10px; /* Space between filter groups */
-        }
-
-        .filter-group {
-            display: flex;
-            width: 100%; /* Make filter group take full width */
-        }
-
-        .filter-btn {
-            flex: 1; /* Distribute space evenly */
-            padding: 10px;
-            border: 1px solid var(--border);
-            background-color: white;
-            cursor: pointer;
-            white-space: nowrap; /* Prevent text wrapping */
-        }
-
-        /* Adjust border-radius for each group */
-        .filter-group .filter-btn:first-child {
-            border-radius: var(--border-radius) 0 0 var(--border-radius);
-            border-right: none;
-        }
-
-        .filter-group .filter-btn:last-child {
-            border-radius: 0 var(--border-radius) var(--border-radius) 0;
-            border-left: none;
-        }
-
-        .filter-group .filter-btn:not(:first-child):not(:last-child) {
-            border-radius: 0;
-            border-right: none;
-            border-left: none;
-        }
-
-        /* New: Style for the date input within the filter group */
-        .filter-group .filter-control {
-            flex: 1; /* Allow it to take up space */
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--border-radius); /* Full border-radius for input */
-            font-size: 1rem;
-            cursor: pointer;
-            background-color: var(--light); /* Slightly different background for input */
-            margin-left: 10px; /* Space from buttons */
-        }
-
-        .filter-btn.active {
-            background-color: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-
-        .no-transactions {
-            text-align: center;
-            padding: 20px;
-            color: var(--secondary);
-        }
-
-        .confirm-modal {
-            text-align: center;
-        }
-
-        .confirm-modal .modal-actions {
-            justify-content: center;
-        }
-
-        .wallet-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 15px;
-            gap: 10px;
-        }
-
-        .wallet-controls label {
-            margin-right: 5px;
-            font-weight: bold;
-        }
-
-        .wallet-controls select,
-        .wallet-controls .btn {
-            padding: 8px;
-            border-radius: var(--border-radius);
-            border: 1px solid var(--border);
-            font-size: 1rem;
-        }
-        .wallet-controls .btn {
-            border: none; /* Override default button border */
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding-bottom: 180px; /* Adjust padding for smaller screens if needed */
-            }
-            .app-container {
-                margin: 0;
-                border-radius: 0;
-                box-shadow: none;
-            }
-            .wallet-controls {
-                flex-wrap: wrap; /* Allow wrapping on smaller screens */
-            }
-            .cash-btn, .btn {
-                margin: 0 2px; /* Less margin on small screens */
-                padding: 10px 15px;
-            }
-            /* Adjust filter buttons for small screens */
-            .filter-group {
-                flex-wrap: wrap; /* Allow filter buttons to wrap */
-            }
-            .filter-btn {
-                flex: 1 1 auto; /* Allow buttons to grow/shrink based on content, but wrap */
-                width: auto; /* Reset width for wrapping */
-                border-radius: var(--border-radius); /* Give all buttons rounded corners on wrap */
-                margin-bottom: 5px; /* Add space between wrapped buttons */
-                border-right: 1px solid var(--border) !important; /* Ensure borders are visible when wrapped */
-                border-left: 1px solid var(--border) !important;
-            }
-            .filter-group .filter-btn:first-child,
-            .filter-group .filter-btn:last-child {
-                border-radius: var(--border-radius);
-            }
-            /* Adjust filter input for small screens */
-            .filter-group .filter-control {
-                margin-left: 0; /* No left margin when wrapped */
-                margin-top: 5px; /* Add top margin if it wraps below buttons */
-                width: 100%; /* Take full width when wrapped */
-            }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MY CASH - Personal Expense Manager</title>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#ffffff; --text:#0f1724; --muted:#6b7280; --primary:#2563eb; --accent:#10b981; --danger:#ef4444; --radius:14px; --shadow:0 10px 30px rgba(2,6,23,0.08);
+}
+:root[data-theme='dark']{ --bg:#071126; --card:#0b1221; --text:#e6eef8; --muted:#9aa6bf; --primary:#60a5fa; --accent:#34d399; --danger:#f87171; --shadow:0 10px 30px rgba(0,0,0,0.6); }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;background:var(--bg);color:var(--text)}
+/* header */
+.app-header{position:sticky;top:0;background:transparent;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--primary),#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.title-wrap h1{margin:0;font-size:1.1rem}
+.title-wrap p{margin:0;color:var(--muted);font-size:0.85rem}
+.controls{display:flex;align-items:center;gap:10px}
+.date-input,.search-input{padding:8px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:var(--card)}
+.search-input{min-width:160px}
+.burger, .theme-toggle{background:none;border:0;font-size:20px;cursor:pointer}
+/* page cards */
+.container{max-width:920px;margin:12px auto;padding:0 16px 100px}
+.card{background:var(--card);border-radius:12px;padding:14px;box-shadow:var(--shadow);}
+.balance{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.balance h2{margin:0}
+.balance .amount{font-size:1.5rem;font-weight:800;color:var(--primary)}
+.transactions{margin-top:14px}
+.tx{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent),var(--card);box-shadow:0 6px 18px rgba(2,6,23,0.03);margin-bottom:10px}
+.tx .left{display:flex;flex-direction:column}
+.tx .meta{color:var(--muted);font-size:0.9rem}
+.tx .amt{font-weight:800;min-width:100px;text-align:right}
+.amt.in{color:var(--accent)}
+.amt.out{color:var(--danger)}
+.tx .actions button{margin-left:8px;padding:6px 8px;border-radius:8px;border:0;cursor:pointer}
+/* side menu */
+.side-menu{position:fixed;top:0;right:-320px;width:320px;height:100%;background:var(--card);box-shadow:var(--shadow);transition:right 0.28s ease;padding:16px;z-index:80}
+.side-menu.open{right:0}
+.side-menu h3{margin-top:0}
+.side-menu label{display:block;margin-top:8px;color:var(--muted)}
+.side-menu select,input,button{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);margin-top:8px}
+.side-menu .small-rows{display:flex;gap:8px}
+.side-menu .small-rows button{flex:1}
+/* bottom action bar */
+.action-bar{position:fixed;left:12px;right:12px;bottom:12px;display:flex;gap:12px;z-index:90}
+.action-bar .big-btn{flex:1;padding:16px;border-radius:14px;border:0;font-weight:800;font-size:1.05rem;cursor:pointer;color:white}
+.big-income{background:linear-gradient(90deg,var(--accent),#06b6a4)}
+.big-expense{background:linear-gradient(90deg,var(--danger),#ef4444)}
+/* modal */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.45);z-index:120}
+.modal .panel{width:100%;max-width:520px;padding:16px;border-radius:12px;background:var(--card)}
+.modal .panel label{display:block;margin-top:8px;color:var(--muted)}
+.modal .panel input{width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)}
+/* responsive */
+@media(max-width:640px){
+  .controls .search-input{min-width:90px}
+  .side-menu{width:100%;right:-100%}
+  .side-menu.open{right:0}
+}
+</style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="app-header">
-            <h1 class="app-title">MY CASH</h1>
-            <p class="app-subtitle">Personal Expense Manager</p>
-        </div>
-
-        <div class="wallet-controls">
-            <label for="walletSelect">Wallet:</label>
-            <select id="walletSelect">
-            </select>
-            <button class="btn btn-primary" id="addWalletBtn">Add New</button>
-            <button class="btn btn-danger" id="deleteWalletBtn">Delete Wallet</button>
-        </div>
-
-        <div class="search-section">
-            <input type="text" class="search-input" id="searchInput" placeholder="Search transactions..." aria-label="Search transactions">
-        </div>
-
-        <div class="filter-section">
-            <div class="filter-group">
-                <button class="filter-btn" data-type-filter="all">All Types</button>
-                <button class="filter-btn" data-type-filter="in">Income</button>
-                <button class="filter-btn" data-type-filter="out">Expenses</button>
-            </div>
-            <div class="filter-group">
-                <button class="filter-btn" data-date-filter="today">Today</button>
-                <button class="filter-btn" data-date-filter="all-dates">All Dates</button>
-                <input type="date" id="dateFilterInput" class="filter-control">
-            </div>
-        </div>
-
-        <div class="balance-section">
-            <div class="net-balance" id="netBalance">0</div>
-            <div>Net Balance</div>
-            <div class="total-in-out">
-                <div class="total-in" id="totalIn">Total In (+) 0</div>
-                <div class="total-out" id="totalOut">Total Out (-) 0</div>
-            </div>
-        </div>
-
-        <div class="reports-section">
-            <div class="reports-header">
-                <h3>TRANSACTIONS</h3>
-                <span class="entries-count" id="entriesCount">Showing 0 entries</span>
-            </div>
-
-            <div class="transaction-list" id="transactionList">
-                <div class="no-transactions">No transactions yet. Add your first transaction!</div>
-            </div>
-        </div>
-    </div> <div class="app-footer-fixed">
-        <div class="cash-in-out-group">
-            <button class="cash-btn cash-in" id="cashInBtn">+ CASH IN</button>
-            <button class="cash-btn cash-out" id="cashOutBtn">- CASH OUT</button>
-        </div>
-
-        <div class="backup-restore-group">
-            <button class="btn btn-primary" id="backupToFileBtn">Backup to File</button>
-            <button class="btn btn-secondary" id="restoreFromFileBtn">Restore from File</button>
-            <input type="file" id="fileInput" accept=".json" style="display: none;">
-        </div>
+<header class="app-header">
+  <div class="brand">
+    <div class="logo">MC</div>
+    <div class="title-wrap"><h1>MY CASH</h1><p>Personal Expense Manager</p></div>
+  </div>
+  <div class="controls">
+    <input id="dateFilter" class="date-input" type="date" aria-label="Select date">
+    <input id="searchInput" class="search-input" placeholder="Search description or amount" aria-label="Search transactions">
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark/light">🌓</button>
+    <button id="burgerBtn" class="burger" aria-label="Open menu">☰</button>
+  </div>
+</header>
+<main class="container">
+  <section class="card balance">
+    <div>
+      <h2>Net Balance</h2>
+      <div class="meta muted">Overall wallet balance</div>
     </div>
-
-    <div class="modal" id="transactionModal" role="dialog" aria-labelledby="modalTitle">
-        <div class="modal-content">
-            <h3 class="modal-title" id="modalTitle">Add Transaction</h3>
-            <div class="form-group">
-                <label for="transactionAmount">Amount</label>
-                <input type="number" id="transactionAmount" class="form-control" placeholder="Enter amount" step="0.01" aria-label="Transaction amount">
-            </div>
-            <div class="form-group">
-                <label for="transactionDescription">Description</label>
-                <input type="text" id="transactionDescription" class="form-control" placeholder="Enter description" maxlength="100" aria-label="Transaction description">
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
-                <button class="btn btn-primary" id="saveBtn">Save</button>
-            </div>
-        </div>
+    <div>
+      <div class="amount" id="netBalance">0</div>
+      <div class="meta muted" id="totals">In: 0 • Out: 0</div>
     </div>
+  </section>
 
-    <div class="modal confirm-modal" id="confirmModal" role="dialog" aria-labelledby="confirmModalTitle">
-        <div class="modal-content">
-            <h3 class="modal-title" id="confirmModalTitle">Confirm Delete</h3>
-            <p id="confirmModalText">Are you sure you want to delete this transaction?</p>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
-                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-            </div>
-        </div>
+  <section class="transactions">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">Transactions</h3>
+      <div class="meta muted" id="entriesCount">0 entries</div>
     </div>
+    <div id="transactionList" style="margin-top:12px"></div>
+  </section>
+</main>
+
+<!-- Bottom action bar -->
+<div class="action-bar">
+  <button id="addIncome" class="big-btn big-income">+ Income</button>
+  <button id="addExpense" class="big-btn big-expense">- Expense</button>
+</div>
+
+<!-- Side menu -->
+<aside id="sideMenu" class="side-menu" aria-hidden="true">
+  <h3>Menu</h3>
+  <label for="walletSelect">Wallet</label>
+  <select id="walletSelect"></select>
+  <div class="small-rows">
+    <button id="addWalletBtn">New Wallet</button>
+    <button id="deleteWalletBtn">Delete Wallet</button>
+  </div>
+  <hr style="margin-top:12px">
+  <strong>Backup & Restore</strong>
+  <button id="backupToFileBtn">Backup to File</button>
+  <button id="restoreFromFileBtn">Restore from File</button>
+  <input id="fileInput" type="file" accept=".json" style="display:none">
+  <hr style="margin-top:12px">
+  <button id="closeMenuBtn">Close</button>
+</aside>
+
+<!-- Modal: Add/Edit transaction -->
+<div id="transactionModal" class="modal" aria-hidden="true">
+  <div class="panel">
+    <h3 id="modalTitle">Add transaction</h3>
+    <label>Type</label>
+    <select id="modalType"><option value="in">Income</option><option value="out">Expense</option></select>
+    <label>Amount</label>
+    <input id="modalAmount" type="number" step="0.01" />
+    <label>Description</label>
+    <input id="modalDescription" type="text" maxlength="100" />
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button id="cancelModal" style="padding:8px 12px;border-radius:8px;border:1px solid #ddd;background:transparent;">Cancel</button>
+      <button id="saveModal" style="padding:8px 12px;border-radius:8px;border:0;background:var(--primary);color:white">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Fully functional app: wallets, transactions, date filter (default today), add/edit/delete, backup/restore, burger menu, theme */
+
+(function(){
+  // state
+  let wallets = {};
+  let currentWalletId = 'main';
+  let editingTransactionId = null;
+
+  // dom refs
+  const $ = sel => document.querySelector(sel);
+  const elements = {
+    dateFilter: $('#dateFilter'),
+    searchInput: $('#searchInput'),
+    transactionList: $('#transactionList'),
+    entriesCount: $('#entriesCount'),
+    netBalance: $('#netBalance'),
+    totals: $('#totals'),
+    addIncome: $('#addIncome'),
+    addExpense: $('#addExpense'),
+    sideMenu: $('#sideMenu'),
+    burgerBtn: $('#burgerBtn'),
+    walletSelect: $('#walletSelect'),
+    addWalletBtn: $('#addWalletBtn'),
+    deleteWalletBtn: $('#deleteWalletBtn'),
+    backupToFileBtn: $('#backupToFileBtn'),
+    restoreFromFileBtn: $('#restoreFromFileBtn'),
+    fileInput: $('#fileInput'),
+    closeMenuBtn: $('#closeMenuBtn'),
+    transactionModal: $('#transactionModal'),
+    modalTitle: $('#modalTitle'),
+    modalType: $('#modalType'),
+    modalAmount: $('#modalAmount'),
+    modalDescription: $('#modalDescription'),
+    cancelModal: $('#cancelModal'),
+    saveModal: $('#saveModal'),
+    themeToggle: $('#themeToggle')
+  };
+
+  // storage
+  function saveToLocalStorage(){ try{ localStorage.setItem('wallets', JSON.stringify(wallets)); }catch(e){ console.error('save error', e); } }
+  function loadFromLocalStorage(){ const raw = localStorage.getItem('wallets'); if(!raw){ wallets = { main: [] }; saveToLocalStorage(); return; } try{ const parsed = JSON.parse(raw); for(const k in parsed) parsed[k] = parsed[k].map(t=> ({ ...t, date: new Date(t.date) })); wallets = parsed; if(!wallets[currentWalletId]) currentWalletId = Object.keys(wallets)[0] || 'main'; }catch(e){ console.error('parse error', e); wallets = { main: [] }; saveToLocalStorage(); } }
+
+  // wallets
+  function populateWalletSelector(){ const sel = elements.walletSelect; sel.innerHTML=''; Object.keys(wallets).forEach(k=>{ const o = document.createElement('option'); o.value = k; o.textContent = k.charAt(0).toUpperCase()+k.slice(1); sel.appendChild(o); }); sel.value = currentWalletId; }
+  function addWallet(){ const name = prompt('Wallet name:'); if(!name) return; const key = name.trim().toLowerCase(); if(wallets[key]){ alert('Wallet exists'); return; } wallets[key] = []; currentWalletId = key; saveToLocalStorage(); populateWalletSelector(); renderAll(); }
+  function deleteWallet(){ const keys = Object.keys(wallets); if(keys.length<=1){ alert('Cannot delete last wallet'); return; } if(!confirm('Delete wallet and all its transactions?')) return; delete wallets[currentWalletId]; currentWalletId = Object.keys(wallets)[0]; saveToLocalStorage(); populateWalletSelector(); renderAll(); }
+
+  // transactions
+  function getTransactions(){ if(!wallets[currentWalletId]) wallets[currentWalletId]=[]; return wallets[currentWalletId]; }
+  function recalcBalances(){ const arr = getTransactions(); if(arr.length===0) return; const asc = [...arr].sort((a,b)=>a.date - b.date); let running = 0; for(const t of asc){ running += (t.type==='in' ? t.amount : -t.amount); t.balance = running; } arr.sort((a,b)=>b.date - a.date); }
+  function ymd(d){ return d.toISOString().split('T')[0]; }
+  function formatDate(d){ return d.toLocaleDateString(); }
+  function formatTime(d){ return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+
+  function getFilteredTransactions(){ const selDate = elements.dateFilter.value; const q = elements.searchInput.value.trim().toLowerCase(); const arr = getTransactions(); return arr.filter(t=>{ if(selDate && ymd(t.date)!==selDate) return false; if(q && !(t.description.toLowerCase().includes(q) || t.amount.toString().includes(q))) return false; return true; }).sort((a,b)=>b.date - a.date); }
 
-    <script>
-        // Data structure for multiple wallets
-        let wallets = {}; // Will be populated from localStorage or default
+  function renderTransactions(){ const list = elements.transactionList; list.innerHTML=''; const txs = getFilteredTransactions(); if(txs.length===0){ const d = document.createElement('div'); d.className='card'; d.textContent = 'No transactions for selected date.'; list.appendChild(d); elements.entriesCount.textContent = '0 entries'; elements.totals.textContent = 'In: 0 • Out: 0'; return; } let totalIn=0, totalOut=0; for(const t of txs){ const elTx = document.createElement('div'); elTx.className='tx'; const left = document.createElement('div'); left.className='left'; const desc = document.createElement('div'); desc.textContent = t.description; desc.style.fontWeight = 700; const meta = document.createElement('div'); meta.className='meta'; meta.textContent = `${formatDate(t.date)} • ${formatTime(t.date)}`; left.appendChild(desc); left.appendChild(meta); const right = document.createElement('div'); right.style.display='flex'; right.style.flexDirection='column'; right.style.alignItems='flex-end'; const amt = document.createElement('div'); amt.className = 'amt ' + (t.type==='in'?'in':'out'); amt.textContent = (t.type==='in'?'+':'-') + t.amount.toLocaleString(); const actions = document.createElement('div'); actions.className='actions'; const editBtn = document.createElement('button'); editBtn.textContent='Edit'; editBtn.addEventListener('click', ()=> openModalForEdit(t.id)); const delBtn = document.createElement('button'); delBtn.textContent='Delete'; delBtn.style.background='#fdecea'; delBtn.addEventListener('click', ()=> { if(confirm('Delete transaction?')) deleteTransaction(t.id); }); actions.appendChild(editBtn); actions.appendChild(delBtn); right.appendChild(amt); right.appendChild(actions); elTx.appendChild(left); elTx.appendChild(right); list.appendChild(elTx); if(t.type==='in') totalIn += t.amount; else totalOut += t.amount; } elements.entriesCount.textContent = `${txs.length} ${txs.length===1?'entry':'entries'}`; elements.totals.textContent = `In: ${totalIn.toLocaleString()} • Out: ${totalOut.toLocaleString()}`; }
 
-        // Global Variables
-        let currentWalletId = 'main'; // Default selected wallet
-        let currentTransactionType = null;
-        let currentTransactionId = null;
-        let currentSearch = '';
-        let currentTypeFilter = 'all'; // 'all', 'in', 'out'
-        let currentDateFilter = 'today'; // 'today', 'all-dates', or 'YYYY-MM-DD' for a specific date
-        let transactionToDelete = null; // For confirm modal delete
-        let deletionType = null; // 'transaction' or 'wallet'
+  function updateNetBalance(){ const arr = getTransactions(); if(arr.length===0){ elements.netBalance.textContent = '0'; return; } elements.netBalance.textContent = (arr[0]?.balance || 0).toLocaleString(); }
 
-        // DOM Elements
-        const elements = {
-            transactionList: document.getElementById('transactionList'),
-            netBalance: document.getElementById('netBalance'),
-            totalIn: document.getElementById('totalIn'),
-            totalOut: document.getElementById('totalOut'),
-            entriesCount: document.getElementById('entriesCount'),
-            cashInBtn: document.getElementById('cashInBtn'),
-            cashOutBtn: document.getElementById('cashOutBtn'),
-            transactionModal: document.getElementById('transactionModal'),
-            modalTitle: document.getElementById('modalTitle'),
-            cancelBtn: document.getElementById('cancelBtn'),
-            saveBtn: document.getElementById('saveBtn'),
-            transactionAmount: document.getElementById('transactionAmount'),
-            transactionDescription: document.getElementById('transactionDescription'),
-            searchInput: document.getElementById('searchInput'),
-            filterTypeButtons: document.querySelectorAll('.filter-group:nth-child(1) .filter-btn'), // Select type filter buttons
-            filterDateButtons: document.querySelectorAll('.filter-group:nth-child(2) .filter-btn'), // Select date filter buttons
-            dateFilterInput: document.getElementById('dateFilterInput'), // New: Date input element
-            confirmModal: document.getElementById('confirmModal'),
-            confirmModalTitle: document.getElementById('confirmModalTitle'),
-            confirmModalText: document.getElementById('confirmModalText'),
-            cancelDeleteBtn: document.getElementById('cancelDeleteBtn'),
-            confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
-            backupToFileBtn: document.getElementById('backupToFileBtn'),
-            restoreFromFileBtn: document.getElementById('restoreFromFileBtn'),
-            fileInput: document.getElementById('fileInput'),
-            walletSelect: document.getElementById('walletSelect'),
-            addWalletBtn: document.getElementById('addWalletBtn'),
-            deleteWalletBtn: document.getElementById('deleteWalletBtn')
-        };
+  // modal
+  function openModal(type='in'){ editingTransactionId = null; elements.modalTitle.textContent = type==='in' ? 'Add Income' : 'Add Expense'; elements.modalType.value = type; elements.modalAmount.value = ''; elements.modalDescription.value = ''; elements.transactionModal.style.display='flex'; }
+  function openModalForEdit(id){ const arr = getTransactions(); const tx = arr.find(x=>x.id===id); if(!tx) return; editingTransactionId = id; elements.modalTitle.textContent = 'Edit Transaction'; elements.modalType.value = tx.type; elements.modalAmount.value = tx.amount; elements.modalDescription.value = tx.description; elements.transactionModal.style.display='flex'; }
+  function closeModal(){ elements.transactionModal.style.display='none'; editingTransactionId = null; }
 
+  function saveModal(){ const type = elements.modalType.value; const amount = parseFloat(elements.modalAmount.value); const description = elements.modalDescription.value.trim(); if(isNaN(amount) || amount<=0){ alert('Enter valid amount'); return; } if(!description){ alert('Enter description'); return; } const arr = getTransactions(); if(editingTransactionId){ const idx = arr.findIndex(x=>x.id===editingTransactionId); if(idx!==-1){ arr[idx].type = type; arr[idx].amount = amount; arr[idx].description = description; arr[idx].date = new Date(arr[idx].date); } } else { const id = arr.length ? Math.max(...arr.map(a=>a.id))+1 : 1; arr.unshift({ id, type, amount, description, date: new Date(), balance:0 }); } recalcBalances(); saveToLocalStorage(); renderAll(); closeModal(); }
 
-        // Get transactions for the current wallet
-        function getCurrentWalletTransactions() {
-            // Ensure the current wallet exists, if not, initialize it as empty.
-            // This is primarily for cases where currentWalletId might be set to a non-existent wallet (e.g., after a faulty restore)
-            if (!wallets[currentWalletId]) {
-                wallets[currentWalletId] = [];
-                saveToLocalStorage(); // Save this new empty wallet
-            }
-            return wallets[currentWalletId];
-        }
+  function deleteTransaction(id){ const arr = getTransactions(); const idx = arr.findIndex(x=>x.id===id); if(idx!==-1) arr.splice(idx,1); recalcBalances(); saveToLocalStorage(); renderAll(); }
 
-        // Load all wallets from localStorage
-        function loadFromLocalStorage() {
-            const stored = localStorage.getItem('wallets');
-            if (stored) {
-                try {
-                    const parsedWallets = JSON.parse(stored);
-                    for (const walletId in parsedWallets) {
-                        if (Array.isArray(parsedWallets[walletId])) {
-                            wallets[walletId] = parsedWallets[walletId].map(t => ({
-                                ...t,
-                                date: new Date(t.date)
-                            }));
-                        }
-                    }
-                } catch (e) {
-                    console.error("Error parsing wallets from localStorage:", e);
-                    wallets = {}; // Reset wallets if parsing fails
-                }
-            }
+  // backup/restore
+  function backupToFile(){ const filename = `my_cash_backup_${new Date().toISOString().slice(0,10)}.json`; const blob = new Blob([JSON.stringify(wallets,null,2)],{type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); alert('Backup saved to file'); }
+  function handleRestoreFile(file){ const reader = new FileReader(); reader.onload = (e)=>{ try{ const data = JSON.parse(e.target.result); for(const k in data) data[k] = data[k].map(t=>({...t, date: new Date(t.date)})); if(!confirm('Restoring will overwrite your current wallets. Continue?')) return; wallets = data; saveToLocalStorage(); populateWalletSelector(); renderAll(); alert('Restore complete'); }catch(err){ alert('Invalid file'); console.error(err); } }; reader.readAsText(file); }
 
-            // If wallets is still empty after attempting to load from storage (e.g., first run, or corrupted data)
-            if (Object.keys(wallets).length === 0) {
-                wallets = {
-                    'main': [ // Initialize with default 'main' wallet and some sample data
-                        { id: 1, type: 'out', amount: 110, description: 'Sadqa', date: new Date('2025-07-15T22:54:00'), balance: 0 },
-                        { id: 2, type: 'out', amount: 1490, description: 'Bought snacks', date: new Date('2025-07-15T22:53:00'), balance: 0 },
-                        { id: 3, type: 'out', amount: 1490, description: 'Bought groceries', date: new Date('2025-07-15T17:35:00'), balance: 0 },
-                        { id: 4, type: 'in', amount: 230, description: 'Freelance payment', date: new Date('2025-07-15T10:30:00'), balance: 0 },
-                        { id: 5, type: 'in', amount: 5000, description: 'Salary', date: new Date('2025-07-10T09:00:00'), balance: 0 },
-                        { id: 6, type: 'out', amount: 1200, description: 'Rent payment', date: new Date('2025-07-05T12:00:00'), balance: 0 }
-                    ],
-                    'savings': [
-                        { id: 1, type: 'in', amount: 10000, description: 'Initial deposit', date: new Date('2024-01-01T10:00:00'), balance: 0 },
-                        { id: 2, type: 'in', amount: 500, description: 'Interest', date: new Date('2024-03-01T10:00:00'), balance: 0 }
-                    ]
-                };
-                saveToLocalStorage();
-            }
+  // render
+  function renderAll(){ recalcBalances(); updateNetBalance(); renderTransactions(); }
 
-            // Ensure currentWalletId points to an existing wallet.
-            // If currentWalletId is not found (e.g., deleted wallet, or first run), default to the first available wallet.
-            if (!Object.keys(wallets).includes(currentWalletId)) {
-                currentWalletId = Object.keys(wallets)[0];
-            }
-        }
+  function ensureDefaults(){ if(!wallets || Object.keys(wallets).length===0){ wallets = { main: [ { id:1, type:'out', amount:110, description:'Sadqa', date:new Date('2025-07-15T22:54:00'), balance:0 }, { id:2, type:'out', amount:1490, description:'Bought snacks', date:new Date('2025-07-15T22:53:00'), balance:0 }, { id:3, type:'in', amount:5000, description:'Salary', date:new Date('2025-07-10T09:00:00'), balance:0 } ] }; saveToLocalStorage(); } if(!wallets[currentWalletId]) currentWalletId = Object.keys(wallets)[0]; }
 
-        // Save all wallets to localStorage
-        function saveToLocalStorage() {
-            localStorage.setItem('wallets', JSON.stringify(wallets));
-        }
+  // theme
+  function applySavedTheme(){ if(localStorage.getItem('theme')==='dark'){ document.documentElement.setAttribute('data-theme','dark'); elements.themeToggle.textContent = '☀️'; } else { document.documentElement.removeAttribute('data-theme'); elements.themeToggle.textContent = '🌓'; } }
+  elements.themeToggle && elements.themeToggle.addEventListener('click', ()=>{ if(document.documentElement.getAttribute('data-theme')==='dark'){ localStorage.setItem('theme','light'); document.documentElement.removeAttribute('data-theme'); elements.themeToggle.textContent = '🌓'; } else { localStorage.setItem('theme','dark'); document.documentElement.setAttribute('data-theme','dark'); elements.themeToggle.textContent = '☀️'; } });
 
-        // Function to backup all wallets to a local JSON file
-        function backupToFile() {
-            const fileName = 'my_cash_wallets_backup.json';
-            const fileContent = JSON.stringify(wallets, null, 2); // Pretty print JSON
+  // events wiring
+  document.addEventListener('DOMContentLoaded', ()=>{
+    loadFromLocalStorage(); ensureDefaults(); populateWalletSelector(); recalcBalances(); elements.dateFilter.value = new Date().toISOString().split('T')[0]; applySavedTheme(); renderAll();
 
-            const blob = new Blob([fileContent], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
+    // burger
+    elements.burgerBtn.addEventListener('click', ()=>{ elements.sideMenu.classList.toggle('open'); elements.sideMenu.setAttribute('aria-hidden', elements.sideMenu.classList.contains('open') ? 'false' : 'true'); });
+    elements.closeMenuBtn.addEventListener('click', ()=>{ elements.sideMenu.classList.remove('open'); elements.sideMenu.setAttribute('aria-hidden','true'); });
 
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+    // wallets
+    elements.walletSelect.addEventListener('change', (e)=>{ currentWalletId = e.target.value; renderAll(); elements.sideMenu.classList.remove('open'); });
+    elements.addWalletBtn.addEventListener('click', addWallet);
+    elements.deleteWalletBtn.addEventListener('click', deleteWallet);
 
-            alert('All wallets backed up successfully to ' + fileName + '!');
-        }
+    // date & search
+    elements.dateFilter.addEventListener('change', renderTransactions);
+    elements.searchInput.addEventListener('input', renderTransactions);
 
-        // Function to restore all wallets from a local JSON file
-        function restoreFromFile() {
-            elements.fileInput.click();
-        }
+    // add/edit
+    elements.addIncome.addEventListener('click', ()=> openModal('in'));
+    elements.addExpense.addEventListener('click', ()=> openModal('out'));
+    elements.cancelModal.addEventListener('click', closeModal);
+    elements.saveModal.addEventListener('click', saveModal);
 
-        // Handle file selection and restoration
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) {
-                return;
-            }
+    // backup/restore
+    elements.backupToFileBtn.addEventListener('click', backupToFile);
+    elements.restoreFromFileBtn.addEventListener('click', ()=> elements.fileInput.click());
+    elements.fileInput.addEventListener('change', (e)=>{ const f = e.target.files[0]; if(f) handleRestoreFile(f); elements.fileInput.value = ''; elements.sideMenu.classList.remove('open'); });
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const loadedData = JSON.parse(e.target.result);
-                    // Basic validation for loaded data (should be an object of arrays)
-                    if (typeof loadedData === 'object' && loadedData !== null && Object.values(loadedData).every(Array.isArray)) {
-                        if (confirm('Restoring will overwrite your current wallets. Are you sure?')) {
-                            // Ensure dates are Date objects for all transactions in all restored wallets
-                            for (const walletId in loadedData) {
-                                if (Array.isArray(loadedData[walletId])) {
-                                    loadedData[walletId] = loadedData[walletId].map(t => ({
-                                        ...t,
-                                        date: new Date(t.date)
-                                    }));
-                                }
-                            }
-                            wallets = loadedData; // Overwrite all wallets
-                            // Ensure currentWalletId is valid after restore
-                            if (!Object.keys(wallets).includes(currentWalletId)) {
-                                currentWalletId = Object.keys(wallets)[0] || 'main'; // Fallback to 'main' if all wallets are empty after restore
-                            }
-                            saveToLocalStorage();
-                            initAppDisplay(); // Re-initialize display
-                            populateWalletSelector(); // Re-populate dropdown
-                            alert('Wallets restored successfully from file!');
-                        }
-                    } else {
-                        alert('Invalid file format. Please select a valid wallet backup file (JSON object of arrays).');
-                    }
-                } catch (error) {
-                    console.error('Error reading or parsing file:', error);
-                    alert('Error reading or parsing file. Please ensure it\'s a valid JSON backup file.');
-                }
-            };
-            reader.readAsText(file);
-        }
+    // modal overlay close
+    document.querySelectorAll('.modal').forEach(m=> m.addEventListener('click', (ev)=>{ if(ev.target===m) m.style.display='none'; }));
+  });
 
-        // Populate the wallet selection dropdown
-        function populateWalletSelector() {
-            elements.walletSelect.innerHTML = ''; // Clear existing options
-            const walletNames = Object.keys(wallets);
-
-            if (walletNames.length === 0) {
-                // This block should ideally not be hit during normal load due to loadFromLocalStorage ensuring wallets exist.
-                // It's a defensive measure if wallets somehow become empty (e.g., external deletion or very specific restore scenarios).
-                const noWalletsOption = new Option('No Wallets Available', '');
-                elements.walletSelect.add(noWalletsOption);
-                elements.walletSelect.disabled = true; // Disable if no wallets
-                elements.deleteWalletBtn.disabled = true; // Cannot delete if no wallets
-            } else {
-                elements.walletSelect.disabled = false;
-                elements.deleteWalletBtn.disabled = (walletNames.length === 1); // Disable delete if only one wallet
-
-                walletNames.forEach(walletId => {
-                    const option = document.createElement('option');
-                    option.value = walletId;
-                    option.textContent = walletId.charAt(0).toUpperCase() + walletId.slice(1); // Capitalize for display
-                    elements.walletSelect.appendChild(option);
-                });
-                elements.walletSelect.value = currentWalletId; // Set current selection (currentWalletId is already guaranteed valid by loadFromLocalStorage)
-            }
-        }
-
-        // Handle wallet change
-        function handleWalletChange() {
-            currentWalletId = elements.walletSelect.value;
-            currentSearch = ''; // Clear search when switching wallets
-            elements.searchInput.value = '';
-            currentTypeFilter = 'all'; // Reset type filter
-            currentDateFilter = 'today'; // Reset date filter
-
-            // Update active classes for type filter buttons
-            elements.filterTypeButtons.forEach(btn => btn.classList.remove('active'));
-            document.querySelector('.filter-group:nth-child(1) .filter-btn[data-type-filter="all"]').classList.add('active');
-
-            // Update active classes for date filter buttons and input
-            elements.filterDateButtons.forEach(btn => btn.classList.remove('active'));
-            document.querySelector('.filter-group:nth-child(2) .filter-btn[data-date-filter="today"]').classList.add('active');
-            elements.dateFilterInput.value = new Date().toISOString().split('T')[0]; // Set to today's date
-            elements.dateFilterInput.disabled = true; // Disable if button is clicked
-
-            initAppDisplay(); // Re-render the display for the new wallet
-        }
-
-        // Function to add a new wallet
-        function addWallet() {
-            const walletName = prompt("Enter a name for the new wallet:");
-            if (walletName === null || walletName.trim() === '') {
-                alert("Wallet name cannot be empty.");
-                return;
-            }
-            const normalizedName = walletName.trim().toLowerCase();
-            if (wallets[normalizedName]) {
-                alert("A wallet with this name already exists. Please choose a different name.");
-                return;
-            }
-
-            wallets[normalizedName] = []; // Create a new empty wallet
-            currentWalletId = normalizedName; // Set it as the current wallet
-            saveToLocalStorage(); // Save all wallets
-            populateWalletSelector(); // Update the dropdown
-            initAppDisplay(); // Re-render for the new wallet
-            alert(`Wallet '${walletName.trim()}' created successfully!`);
-        }
-
-        // Function to prompt and delete the current wallet
-        function deleteCurrentWallet() {
-            const walletNames = Object.keys(wallets);
-            if (walletNames.length <= 1) {
-                alert("You cannot delete the last wallet. Please add another wallet first if you wish to delete this one.");
-                return;
-            }
-
-            deletionType = 'wallet';
-            elements.confirmModalTitle.textContent = `Delete Wallet: "${elements.walletSelect.options[elements.walletSelect.selectedIndex].textContent}"`;
-            elements.confirmModalText.textContent = `Are you sure you want to delete the wallet "${elements.walletSelect.options[elements.walletSelect.selectedIndex].textContent}" and all its transactions? This action cannot be undone.`;
-            elements.confirmModal.style.display = 'flex';
-        }
-
-        // Execute deletion based on deletionType
-        function performDeletion() {
-            if (deletionType === 'transaction') {
-                deleteTransaction();
-            } else if (deletionType === 'wallet') {
-                delete wallets[currentWalletId]; // Delete the wallet object itself
-                // After deletion, switch to the first available wallet
-                currentWalletId = Object.keys(wallets)[0]; // Will always be valid due to the walletNames.length check in deleteCurrentWallet
-                saveToLocalStorage();
-                populateWalletSelector(); // Update dropdown
-                initAppDisplay(); // Re-render for the new current wallet
-                alert("Wallet deleted successfully!");
-            }
-            elements.confirmModal.style.display = 'none';
-            deletionType = null; // Reset deletion type
-        }
-
-
-        // Function to call all display-related updates
-        function initAppDisplay() {
-            const currentTransactions = getCurrentWalletTransactions(); // Ensure wallet exists if currentWalletId is valid
-            currentTransactions.sort((a, b) => b.date - a.date);
-            recalculateBalances();
-            renderTransactions();
-            updateSummary();
-        }
-
-        // Initialize the app
-        function init() {
-            console.log("App initializing...");
-            loadFromLocalStorage();
-            populateWalletSelector();
-
-            // Set initial active state for filter buttons, and date input setup
-            // For Type filters
-            document.querySelector('.filter-group:nth-child(1) .filter-btn[data-type-filter="all"]').classList.add('active');
-            // For Date filters
-            document.querySelector('.filter-group:nth-child(2) .filter-btn[data-date-filter="today"]').classList.add('active');
-            elements.dateFilterInput.value = new Date().toISOString().split('T')[0]; // Set to today's date
-            elements.dateFilterInput.disabled = false; // <<< IMPORTANT CHANGE: Make it enabled by default
-
-            initAppDisplay(); // Initial display load
-
-            // Event Listeners
-            elements.cashInBtn.addEventListener('click', () => {
-                currentTransactionType = 'in';
-                openTransactionModal('Add Income');
-            });
-
-            elements.cashOutBtn.addEventListener('click', () => {
-                currentTransactionType = 'out';
-                openTransactionModal('Add Expense');
-            });
-
-            elements.cancelBtn.addEventListener('click', closeTransactionModal);
-            elements.saveBtn.addEventListener('click', saveTransaction);
-            elements.searchInput.addEventListener('input', handleSearch);
-
-            // Filter Buttons for Type
-            elements.filterTypeButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Remove 'active' from all type filter buttons
-                    elements.filterTypeButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    currentTypeFilter = button.dataset.typeFilter;
-                    renderTransactions();
-                });
-            });
-
-            // Filter Buttons for Date
-            elements.filterDateButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Remove 'active' from all date filter buttons
-                    elements.filterDateButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    currentDateFilter = button.dataset.dateFilter;
-
-                    if (currentDateFilter === 'today') {
-                        elements.dateFilterInput.value = new Date().toISOString().split('T')[0];
-                        elements.dateFilterInput.disabled = true; // Disable if Today button is clicked
-                    } else if (currentDateFilter === 'all-dates') {
-                        elements.dateFilterInput.value = '';
-                        elements.dateFilterInput.disabled = true; // Disable if All Dates button is clicked
-                    }
-                    renderTransactions();
-                });
-            });
-
-            // Event listener for the new date input
-            elements.dateFilterInput.addEventListener('change', () => {
-                // Always deactivate buttons first, as input selection is a custom state
-                elements.filterDateButtons.forEach(btn => btn.classList.remove('active'));
-
-                if (elements.dateFilterInput.value === '') {
-                    // If date input is cleared, switch to 'all-dates' filter
-                    currentDateFilter = 'all-dates';
-                    // Activate 'All Dates' button and disable input
-                    document.querySelector('.filter-group:nth-child(2) .filter-btn[data-date-filter="all-dates"]').classList.add('active');
-                    elements.dateFilterInput.disabled = true; // Disable if cleared (now controlled by 'All Dates' button implicitly)
-                } else {
-                    // Specific date selected via input
-                    currentDateFilter = elements.dateFilterInput.value; // YYYY-MM-DD
-                    elements.dateFilterInput.disabled = false; // Keep it enabled for further date selection
-                }
-                renderTransactions();
-            });
-
-
-            // Universal Cancel/Confirm for Modals
-            elements.cancelDeleteBtn.addEventListener('click', () => {
-                elements.confirmModal.style.display = 'none';
-                deletionType = null; // Reset
-                transactionToDelete = null; // Reset
-            });
-            elements.confirmDeleteBtn.addEventListener('click', performDeletion); // Calls the unified deletion handler
-
-            elements.backupToFileBtn.addEventListener('click', backupToFile);
-            elements.restoreFromFileBtn.addEventListener('click', restoreFromFile);
-            elements.fileInput.addEventListener('change', handleFileSelect);
-            elements.walletSelect.addEventListener('change', handleWalletChange);
-            elements.addWalletBtn.addEventListener('click', addWallet);
-            elements.deleteWalletBtn.addEventListener('click', deleteCurrentWallet);
-
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    closeTransactionModal();
-                    elements.confirmModal.style.display = 'none';
-                    deletionType = null; // Reset on Escape
-                    transactionToDelete = null; // Reset on Escape
-                }
-            });
-            console.log("App initialized successfully.");
-        }
-
-        // Open transaction modal for add or edit
-        function openTransactionModal(title, transaction = null) {
-            elements.confirmModal.style.display = 'none'; // Ensure confirm modal is hidden
-            elements.modalTitle.textContent = title;
-
-            if (transaction) {
-                currentTransactionId = transaction.id;
-                elements.transactionAmount.value = transaction.amount;
-                elements.transactionDescription.value = transaction.description;
-                currentTransactionType = transaction.type;
-            } else {
-                currentTransactionId = null;
-                elements.transactionAmount.value = '';
-                elements.transactionDescription.value = '';
-            }
-
-            elements.transactionModal.style.display = 'flex';
-            elements.transactionAmount.focus();
-        }
-
-        // Close transaction modal
-        function closeTransactionModal() {
-            elements.transactionModal.style.display = 'none';
-            currentTransactionId = null;
-        }
-
-        // Save new or edited transaction
-        function saveTransaction() {
-            const currentTransactions = getCurrentWalletTransactions();
-            const amount = parseFloat(elements.transactionAmount.value);
-            const description = elements.transactionDescription.value.trim();
-
-            if (isNaN(amount)) {
-                alert('Please enter a valid amount');
-                return;
-            }
-
-            if (amount <= 0) {
-                alert('Amount must be greater than 0');
-                return;
-            }
-
-            if (!description) {
-                alert('Please enter a description');
-                return;
-            }
-
-            if (description.length > 100) {
-                alert('Description cannot exceed 100 characters');
-                return;
-            }
-
-            if (currentTransactionId) {
-                const index = currentTransactions.findIndex(t => t.id === currentTransactionId);
-                if (index !== -1) {
-                    currentTransactions[index].amount = amount;
-                    currentTransactions[index].description = description;
-                    currentTransactions[index].type = currentTransactionType;
-                }
-            } else {
-                const newTransaction = {
-                    id: currentTransactions.length > 0 ? Math.max(...currentTransactions.map(t => t.id)) + 1 : 1,
-                    type: currentTransactionType,
-                    amount: amount,
-                    description: description,
-                    date: new Date(),
-                    balance: 0 // Will be recalculated
-                };
-
-                currentTransactions.unshift(newTransaction);
-            }
-
-            recalculateBalances(); // Recalculate for current wallet after adding/editing
-            saveToLocalStorage(); // Save all wallets
-            closeTransactionModal();
-            initAppDisplay(); // Re-render current wallet
-        }
-
-        // Prompt to delete a transaction
-        function promptDeleteTransaction(transaction) {
-            elements.transactionModal.style.display = 'none';
-            transactionToDelete = transaction;
-            deletionType = 'transaction';
-            elements.confirmModalTitle.textContent = 'Confirm Delete Transaction';
-            elements.confirmModalText.textContent = 'Are you sure you want to delete this transaction?';
-            elements.confirmModal.style.display = 'flex';
-        }
-
-        // Delete the transaction after confirmation (called by performDeletion)
-        function deleteTransaction() {
-            if (!transactionToDelete) return;
-
-            const currentTransactions = getCurrentWalletTransactions();
-            const index = currentTransactions.findIndex(t => t.id === transactionToDelete.id);
-            if (index !== -1) {
-                currentTransactions.splice(index, 1);
-            }
-
-            recalculateBalances(); // Recalculate for current wallet
-            saveToLocalStorage(); // Save all wallets
-            initAppDisplay(); // Re-render current wallet
-            transactionToDelete = null;
-        }
-
-        // Recalculate all balances for the current wallet starting from the oldest transaction
-        function recalculateBalances() {
-            const currentTransactions = getCurrentWalletTransactions();
-            if (currentTransactions.length === 0) return;
-
-            // Sort by date ascending for correct balance calculation
-            const sortedTransactions = [...currentTransactions].sort((a, b) => a.date.getTime() - b.date.getTime());
-            let runningBalance = 0;
-
-            for (const transaction of sortedTransactions) {
-                runningBalance += transaction.type === 'in' ? transaction.amount : -transaction.amount;
-                transaction.balance = runningBalance;
-            }
-
-            // Sort back to newest first for display
-            currentTransactions.sort((a, b) => b.date.getTime() - a.date.getTime());
-        }
-
-
-        // Handle search input
-        function handleSearch() {
-            currentSearch = elements.searchInput.value.toLowerCase();
-            renderTransactions();
-        }
-
-        // Filter transactions for the current wallet based on search and filter
-        function getFilteredTransactions() {
-            const currentTransactions = getCurrentWalletTransactions();
-            const todayString = new Date().toISOString().split('T')[0]; // YYYY-MM-DD for today
-
-            return currentTransactions.filter(t => {
-                const typeMatch = currentTypeFilter === 'all' || t.type === currentTypeFilter;
-                const searchMatch = currentSearch === '' ||
-                                    t.description.toLowerCase().includes(currentSearch) ||
-                                    t.amount.toString().includes(currentSearch);
-
-                let dateMatch = true; // Assume true if 'all-dates' or no specific date is selected
-                if (currentDateFilter === 'today') {
-                    const transactionDateString = t.date.toISOString().split('T')[0];
-                    dateMatch = transactionDateString === todayString;
-                } else if (currentDateFilter !== 'all-dates') { // If currentDateFilter holds a specific date string (YYYY-MM-DD)
-                    const transactionDateString = t.date.toISOString().split('T')[0];
-                    dateMatch = transactionDateString === currentDateFilter; // Compare with selected date
-                }
-                // If currentDateFilter is 'all-dates', dateMatch remains true
-
-                return typeMatch && searchMatch && dateMatch;
-            });
-        }
-
-        // Render transactions for the current wallet based on filters and search
-        function renderTransactions() {
-            const filteredTransactions = getFilteredTransactions();
-            elements.transactionList.innerHTML = '';
-
-            if (filteredTransactions.length === 0) {
-                const noTransactions = document.createElement('div');
-                noTransactions.className = 'no-transactions';
-                if (currentSearch) {
-                    noTransactions.textContent = `No transactions match your search for ${currentDateFilter === 'today' ? 'today' : (currentDateFilter === 'all-dates' ? 'all dates' : 'the selected date')}.`;
-                } else if (currentDateFilter === 'today') {
-                    noTransactions.textContent = 'No transactions for today yet. Add your first transaction!';
-                } else if (currentDateFilter === 'all-dates') {
-                    noTransactions.textContent = 'No transactions in this wallet. Add your first transaction!';
-                } else {
-                    noTransactions.textContent = `No transactions found for ${formatDate(new Date(currentDateFilter))}.`;
-                }
-                elements.transactionList.appendChild(noTransactions);
-                elements.entriesCount.textContent = `Showing 0 entries`;
-                return;
-            }
-
-            const grouped = groupByDate(filteredTransactions);
-
-            // Sort grouped dates (keys) from newest to oldest
-            const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
-
-            for (const date of sortedDates) {
-                const transactionsForDate = grouped[date];
-                const dateHeader = document.createElement('div');
-                dateHeader.className = 'transaction-day';
-                dateHeader.textContent = formatDate(new Date(date));
-                elements.transactionList.appendChild(dateHeader);
-
-                transactionsForDate.forEach(transaction => {
-                    const transactionEl = document.createElement('div');
-                    transactionEl.className = 'transaction-item';
-
-                    const detailsEl = document.createElement('div');
-                    detailsEl.className = 'transaction-details';
-
-                    const descEl = document.createElement('div');
-                    descEl.textContent = transaction.description;
-
-                    const metaEl = document.createElement('div');
-                    metaEl.className = 'transaction-meta';
-                    metaEl.textContent = `Entry at ${formatTime(transaction.date)}`;
-
-                    detailsEl.appendChild(descEl);
-                    detailsEl.appendChild(metaEl);
-
-                    const amountEl = document.createElement('div');
-                    amountEl.className = `transaction-amount ${transaction.type === 'in' ? 'positive' : 'negative'}`;
-                    amountEl.textContent = `${transaction.type === 'in' ? '+' : '-'}${transaction.amount.toLocaleString()}`;
-
-                    const actionsEl = document.createElement('div');
-                    actionsEl.className = 'transaction-actions';
-
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'action-btn edit-btn';
-                    editBtn.innerHTML = '✏️';
-                    editBtn.title = 'Edit';
-                    editBtn.setAttribute('aria-label', 'Edit transaction');
-                    editBtn.addEventListener('click', () => {
-                        const title = transaction.type === 'in' ? 'Edit Income' : 'Edit Expense';
-                        openTransactionModal(title, transaction);
-                    });
-
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'action-btn delete-btn';
-                    deleteBtn.innerHTML = '🗑️';
-                    deleteBtn.title = 'Delete';
-                    deleteBtn.setAttribute('aria-label', 'Delete transaction');
-                    deleteBtn.addEventListener('click', () => promptDeleteTransaction(transaction));
-
-                    actionsEl.appendChild(editBtn);
-                    actionsEl.appendChild(deleteBtn);
-
-                    transactionEl.appendChild(detailsEl);
-                    transactionEl.appendChild(amountEl);
-                    transactionEl.appendChild(actionsEl);
-
-                    elements.transactionList.appendChild(transactionEl);
-                });
-            }
-
-            elements.entriesCount.textContent = `Showing ${filteredTransactions.length} ${filteredTransactions.length === 1 ? 'entry' : 'entries'}`;
-        }
-
-        // Update summary information for the current wallet
-        function updateSummary() {
-            const currentTransactions = getCurrentWalletTransactions();
-            if (currentTransactions.length === 0) {
-                elements.netBalance.textContent = '0';
-                elements.totalIn.textContent = 'Total In (+) 0';
-                elements.totalOut.textContent = 'Total Out (-) 0';
-                return;
-            }
-
-            const totalIn = currentTransactions.reduce((sum, t) => sum + (t.type === 'in' ? t.amount : 0), 0);
-            const totalOut = currentTransactions.reduce((sum, t) => sum + (t.type === 'out' ? t.amount : 0), 0);
-            const netBalance = currentTransactions[0].balance; // Get balance from the newest transaction
-
-            elements.netBalance.textContent = netBalance.toLocaleString();
-            elements.totalIn.textContent = `Total In (+) ${totalIn.toLocaleString()}`;
-            elements.totalOut.textContent = `Total Out (-) ${totalOut.toLocaleString()}`;
-        }
-
-        // Helper function to group transactions by date
-        function groupByDate(transactions) {
-            return transactions.reduce((groups, transaction) => {
-                const date = transaction.date.toISOString().split('T')[0]; // YYYY-MM-DD
-                if (!groups[date]) {
-                    groups[date] = [];
-                }
-                groups[date].push(transaction);
-                return groups;
-            }, {});
-        }
-
-        // Helper function to format date
-        function formatDate(date) {
-            const options = { day: 'numeric', month: 'long', year: 'numeric' };
-            return date.toLocaleDateString(undefined, options);
-        }
-
-        // Helper function to format time
-        function formatTime(date) {
-            const options = { hour: '2-digit', minute: '2-digit' };
-            return date.toLocaleTimeString(undefined, options);
-        }
-
-        // Initialize the app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+})();
+</script>
 </body>
 </html>
